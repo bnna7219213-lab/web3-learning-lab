@@ -1,0 +1,24 @@
+# 联盟链指标采集（被 docker/docker-compose.yml 引用）
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  # 4 个验证者节点的 metrics 端口（compose 里 node-1 显式开了 9545；
+  # 其余节点要采集需在各自 command 里加 --metrics-enabled=true --metrics-port=9545）
+  - job_name: besu-node-1
+    static_configs:
+      - targets: ["node-1:9545"]
+        labels: { role: validator }
+  - job_name: besu-node-2
+    static_configs:
+      - targets: ["node-2:9545"]
+        labels: { role: validator }
+  - job_name: besu-node-3
+    static_configs:
+      - targets: ["node-3:9545"]
+        labels: { role: validator }
+  - job_name: besu-node-4
+    static_configs:
+      - targets: ["node-4:9545"]
+        labels: { role: validator }

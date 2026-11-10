@@ -1,0 +1,15 @@
+{
+  "name": "p01-blockchain-cognition-toolbox",
+  "private": true,
+  "type": "module",
+  "description": "P01 区块链认知工具箱：零依赖前端 Demo + Node CLI 演示 + node:test 单测",
+  "scripts": {
+    "test": "node --test \"test/*.test.mjs\"",
+    "serve": "node ../../tools/serve.mjs",
+    "demo:avalanche": "node demos/avalanche.mjs",
+    "demo:chain": "node demos/hash-chain.mjs",
+    "demo:merkle": "node demos/merkle-proof.mjs",
+    "demo:sign": "node demos/device-signature.mjs",
+    "demo:pow": "node demos/pow-mining.mjs"
+  }
+}

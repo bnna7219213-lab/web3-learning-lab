@@ -1,0 +1,34 @@
+# 本地 2 节点私有 PoS 网（多客户端 + 监控）
+# 键名与默认值取自 ethpandaops/ethereum-package README「Configuration」与
+# .github/tests/mix-with-tools.yaml（CI 实测），抓取于 2026-10-14。
+# 运行：kurtosis run --enclave my-testnet github.com/ethpandaops/ethereum-package --args-file network_params/minimal-2nodes.yaml
+participants:
+  # 节点 1：Geth + Lighthouse（最主流组合，出问题最容易搜到答案）
+  - el_type: geth
+    cl_type: lighthouse
+
+  # 节点 2：Reth + Teku（故意用不同实现，验证多客户端兼容性）
+  - el_type: reth
+    cl_type: teku
+
+# 观测与压测：没有监控的私有网 = 出问题时只能靠猜
+additional_services:
+  - prometheus
+  - grafana
+  - forkmon          # 分叉与链尖可视化，做「重组」实验时最有用
+  - tx_fuzz          # 持续灌交易，让链上一直有活动，便于观察最终性
+
+# 每节点验证者密钥数：默认 128。降到 16 可以显著加快本地起网（keystore 生成很慢）
+network_params:
+  num_validator_keys_per_node: 16
+
+  # 链 ID：全局唯一并登记，防跨网重放（与 P01 签名域含 chainId 同理）
+  network_id: "3151908"
+
+  # ⚠️ 红线：这一行是公开在 README 里的默认测试助记词。
+  #    任何非本机演示场景都必须换成自己生成的助记词（并放进密钥管理，不要写进 git）。
+  #    公网部署时保留默认值 = 任何人可花你的预存款并用同助记词派生的验证者接管链。
+  preregistered_validator_keys_mnemonic: "giant issue aisle success illegal bike spike question tent bar rely arctic volcano long crawl hungry vocal artwork sniff fantasy very lucky have athlete"
+
+# 验证者远程签名 API（做密钥分离部署时用）
+keymanager_enabled: true

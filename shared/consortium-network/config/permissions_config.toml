@@ -1,0 +1,27 @@
+# 节点 + 账户双白名单（Besu 权限管理）
+# 用法：两台文件可以是同一个，也可分开；改完需重启节点或调用 permissioning API 热加载。
+# 注意：enode URL 里的 PUBKEY 是「节点密钥」的公钥，不是账户公钥，两者不要混。
+
+nodes-allowlist = [
+  # ---- 验证者（4 台，n=3f+1 → f=1，quorum=3：挂 1 台正常，挂 2 台停链）----
+  "enode://PUBKEY_NODE01@10.0.1.11:30303",
+  "enode://PUBKEY_NODE02@10.0.1.12:30303",
+  "enode://PUBKEY_NODE03@10.0.1.13:30303",
+  "enode://PUBKEY_NODE04@10.0.1.14:30303",
+  # ---- RPC 接入（主备）----
+  "enode://PUBKEY_RPC01@10.0.1.20:30303",
+  "enode://PUBKEY_RPC02@10.0.1.21:30303",
+  # ---- Boot 节点（只做发现，不出块）----
+  "enode://PUBKEY_BOOT@10.0.1.10:30303"
+  # ---- 成员方自有节点：接入流程见 docs/03-成员接入与权限治理.md ----
+  # "enode://PUBKEY_MEMBER_A@10.20.1.5:30303"
+]
+
+accounts-allowlist = [
+  # 账户白名单：控制「谁能发交易」。联盟链里这是运营方的核心管控点。
+  "0xREPLACE_ADMIN_ADDRESS",
+  "0xREPLACE_MEMBER_A_ADDRESS",
+  "0xREPLACE_MEMBER_B_ADDRESS"
+  # ⚠️ 若开启此白名单，合约内部调用与部署者地址也必须在列，否则 P04 之后的部署会失败。
+  # 学习/试点阶段建议先只开 nodes-allowlist，把 accounts 白名单留到生产再启用。
+]

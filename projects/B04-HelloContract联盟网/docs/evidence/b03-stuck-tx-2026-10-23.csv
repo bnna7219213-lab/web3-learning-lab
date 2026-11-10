@@ -1,0 +1,17 @@
+at,phase,height,tx_seen,tx_block,tx_gasPrice,tx_type,receipt,receipt_status,nonce_latest,nonce_pending,account_balance,pending_block,in_pool
+2026-10-23T16:48:15.624Z,t+0,77825,true,,1,0,false,,0,1,0,true,true
+2026-10-23T16:49:15.709Z,t+60s,77833,true,,1,0,false,,0,1,0,true,true
+2026-10-23T16:50:15.786Z,t+120s,77840,true,,1,0,false,,0,1,0,true,true
+2026-10-23T16:51:15.860Z,t+180s,77847,true,,1,0,false,,0,1,0,true,true
+2026-10-23T16:52:15.928Z,t+240s,77855,true,,1,0,false,,0,1,0,true,true
+2026-10-23T16:53:15.949Z,t+300s,77861,true,,1,0,false,,0,1,0,true,true
+2026-10-23T16:54:16.024Z,t+360s,77869,true,,1,0,false,,0,1,0,true,true
+2026-10-23T16:55:16.099Z,t+420s,77876,true,,1,0,false,,0,1,0,true,true
+2026-10-23T16:56:16.171Z,t+480s,77883,true,,1,0,false,,0,1,0,true,true
+2026-10-23T16:57:16.243Z,t+540s,77891,true,,1,0,false,,0,1,0,true,true
+2026-10-23T16:58:16.260Z,t+600s,77897,true,,1,0,false,,0,1,0,true,true
+2026-10-23T16:59:16.328Z,t+660s,77905,true,,1,0,false,,0,1,0,true,true
+2026-10-23T17:00:16.399Z,t+720s,77912,true,,1,0,false,,0,1,0,true,true
+2026-10-23T17:01:16.470Z,t+780s,77919,true,,1,0,false,,0,1,0,true,true
+2026-10-23T17:02:16.541Z,t+840s,77927,true,,1,0,false,,0,1,0,true,true
+2026-10-23T17:03:16.559Z,t+900s,77933,true,,1,0,false,,0,1,0,true,true

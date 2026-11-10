@@ -1,0 +1,108 @@
+:root{
+  --bg:#0b0f17; --panel:#121826; --panel2:#0e1420; --line:#1f2a3d;
+  --fg:#dce5f4; --dim:#8fa3c0; --acc:#4da3ff; --ok:#39d98a; --warn:#ffb454;
+  --mono:ui-monospace,SFMono-Regular,Consolas,"Liberation Mono",monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.6 -apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}
+code,pre,.hash{font-family:var(--mono)}
+header{display:flex;justify-content:space-between;gap:16px;align-items:center;flex-wrap:wrap;
+  padding:18px 24px;background:linear-gradient(180deg,#101725,#0b0f17);border-bottom:1px solid var(--line)}
+h1{margin:0;font-size:20px;letter-spacing:.4px}
+.sub{margin:4px 0 0;color:var(--dim);font-size:13px}
+.conn{display:flex;align-items:center;gap:10px}
+.conn input{width:210px}
+.dot{width:11px;height:11px;border-radius:50%;background:#444;display:inline-block}
+.dot.on{background:var(--ok);box-shadow:0 0 8px var(--ok)}
+.dot.off{background:#e5484d}
+main{max-width:1080px;margin:0 auto;padding:20px 24px 40px;display:grid;gap:16px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.stat .k{display:block;color:var(--dim);font-size:12px;text-transform:uppercase;letter-spacing:.6px}
+.stat .v{font-size:20px;font-family:var(--mono);color:var(--ok)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+.card h2{margin:0 0 12px;font-size:15px}
+.note{color:var(--dim);font-weight:400;font-size:12.5px;margin-left:8px}
+.search{display:flex;gap:10px}
+input{background:var(--panel2);border:1px solid var(--line);color:var(--fg);border-radius:8px;padding:9px 11px;font-family:var(--mono);font-size:13.5px;width:100%}
+input:focus{outline:none;border-color:var(--acc)}
+button{background:var(--panel2);border:1px solid var(--line);color:var(--fg);border-radius:8px;padding:9px 16px;cursor:pointer;font-size:14px}
+button.primary{background:var(--acc);border-color:var(--acc);color:#04121f;font-weight:600}
+button:hover{filter:brightness(1.12)}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);font-family:var(--mono)}
+th{color:var(--dim);font-size:12px;font-family:inherit}
+tbody tr{cursor:pointer}
+tbody tr:hover{background:#16203a}
+.kv{display:grid;grid-template-columns:minmax(140px,220px) 1fr;gap:2px 14px;align-items:start}
+.kv .k{color:var(--dim);font-size:13px;padding:5px 0}
+.kv .v{padding:5px 0;word-break:break-all;font-family:var(--mono);font-size:13px}
+.kv .v.ok{color:var(--ok)} .kv .v.acc{color:var(--acc)} .kv .v.warn{color:var(--warn)}
+.tag{display:inline-block;padding:1px 8px;border-radius:999px;font-size:11.5px;border:1px solid}
+.tag.ok{color:var(--ok);border-color:var(--ok)} .tag.warn{color:var(--warn);border-color:var(--warn)}
+pre{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:10px;overflow:auto;font-size:12.5px}
+.hash{color:var(--acc);text-decoration:none}
+.hash:hover{text-decoration:underline}
+.empty{color:var(--dim);font-size:13.5px;padding:6px 0}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+footer{border-top:1px solid var(--line);color:var(--dim);font-size:12.5px;padding:14px 24px;text-align:center}
+
+/* ---- 钱包操作流水线 ---- */
+.pipe{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}
+.pstep{position:relative;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:11px 12px 10px;min-height:118px;display:flex;flex-direction:column;gap:5px}
+.pstep::after{content:"→";position:absolute;right:-13px;top:50%;transform:translateY(-50%);color:var(--dim);font-size:15px;z-index:1}
+.pstep:last-child::after{content:""}
+.pstep .pn{display:flex;align-items:center;justify-content:space-between;gap:6px}
+.pstep .pnum{width:22px;height:22px;border-radius:50%;background:#182238;border:1px solid var(--line);color:var(--dim);font:600 12px/20px var(--mono);text-align:center;flex:0 0 auto}
+.pstep .ptitle{font-size:13.5px;font-weight:600;color:var(--fg)}
+.pstep .pdesc{font-size:12px;color:var(--dim);line-height:1.5;flex:1}
+.pstep .pstate{font-size:11.5px;font-family:var(--mono);color:var(--dim)}
+.pstep.done{border-color:#1d4d38}
+.pstep.done .pnum{background:#12332a;border-color:var(--ok);color:var(--ok)}
+.pstep.done .pstate{color:var(--ok)}
+.pstep.active{border-color:var(--acc);box-shadow:0 0 0 1px rgba(77,163,255,.35)}
+.pstep.active .pnum{border-color:var(--acc);color:var(--acc)}
+.pstep.active .pstate{color:var(--acc)}
+.pstep .plink{display:inline-block;font-size:12px;color:var(--acc);text-decoration:none;margin-top:2px}
+.pstep .plink:hover{text-decoration:underline}
+.pipefoot{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:12px;padding-top:10px;border-top:1px solid var(--line)}
+.pipego{background:var(--acc);color:#04121f;border-radius:8px;padding:8px 16px;font-size:13.5px;font-weight:600;text-decoration:none}
+.pipego:hover{filter:brightness(1.12)}
+
+/* ---- 统计图表（手写 SVG） ---- */
+.chartwrap{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:10px;overflow-x:auto}
+.chartwrap svg{display:block;width:100%;min-width:560px;height:220px}
+.legend{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--dim)}
+.legend i{width:12px;height:12px;border-radius:3px;display:inline-block}
+
+/* 拓扑真实化：页头"在线 N/4 · quorum · 容错余量"三态着色。
+   只写静态"4 验证者"会在只剩 3 台时误导排障（2026-10-16 踩过），所以这块必须动态。 */
+.topo{display:inline-block;padding:1px 7px;border-radius:6px;font-size:12px;font-family:var(--mono);border:1px solid}
+.topo.ok{color:var(--ok);border-color:var(--ok)}
+.topo.warn{color:var(--warn);border-color:var(--warn)}
+.topo.bad{color:#e5484d;border-color:#e5484d}
+.tag.bad{color:#e5484d;border-color:#e5484d}
+/* 客户独立复核命令块：交付时直接抄走，不用翻文档 */
+pre.cmd{margin:6px 0;padding:8px 10px;background:var(--panel2);border:1px solid var(--line);
+        border-radius:6px;font-family:var(--mono);font-size:12px;color:var(--acc);
+        white-space:pre-wrap;word-break:break-all}
+
+/* 看门狗横幅：停链时页面其它部分看着完全正常（RPC 通、绿点亮、区块列表有数据），
+   所以健康状态必须钉在最上面，并显示"体检时间"——没有时间的健康条等于自说自话。 */
+.hb{margin:0 0 14px;padding:10px 14px;border-radius:10px;border:1px solid;font-size:13.5px;font-weight:600}
+.hb.ok{background:rgba(57,217,138,.08);border-color:var(--ok);color:var(--ok)}
+.hb.warn{background:rgba(255,180,84,.1);border-color:var(--warn);color:var(--warn)}
+.hb.crit{background:rgba(229,72,77,.12);border-color:#e5484d;color:#ff8b8f}
+.hb.stale{background:rgba(143,163,192,.1);border-color:var(--dim);color:var(--dim)}
+.hblist{margin:6px 0 0;padding-left:18px;font-weight:400;font-size:12.5px}
+.hblist li{margin:2px 0}
+.hbfix{margin-top:6px;padding:6px 9px;background:rgba(0,0,0,.28);border-radius:6px;
+      font-family:var(--mono);font-size:12px;font-weight:400;color:var(--fg)}
+
+/* ICP 备案号：/b03 挂在已备案主域 <your-domain.example> 下，按工信部要求页脚需展示备案号并链到
+   beian.miit.gov.cn。nofollow 是防止这个外链把主域权重分走。
+   block = 独占一行（不要改成 inline：那样会和说明文字挤在一起）。
+   nowrap 只作用于号码本身，防止"<ICP备案号>"被窄屏从中间截断。 */
+footer .icp{display:block;margin-top:6px;white-space:nowrap}
+footer .icp a{color:var(--dim);text-decoration:none;border-bottom:1px dotted var(--line)}
+footer .icp a:hover{color:var(--acc);border-bottom-color:var(--acc)}

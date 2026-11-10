@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>P02 · MiniChain 节点面板</title>
+<link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+<header class="topbar">
+  <div>
+    <h1>MiniChain 节点面板</h1>
+    <p class="sub">P02 · 先执行 <code>node bin/network.mjs</code>，再打开本页。前端与节点用同一套 <code>src/crypto.js</code> 签名。</p>
+  </div>
+  <div class="toolbar">
+    <label><input type="checkbox" id="autoplay" checked /> 自动刷新</label>
+    <button id="refresh" class="primary">刷新</button>
+  </div>
+</header>
+
+<main>
+  <section class="card">
+    <h2>节点状态</h2>
+    <div id="nodes" class="node-grid"></div>
+    <p id="consensus" class="note"></p>
+  </section>
+
+  <section class="card">
+    <h2>区块浏览 <select id="pick"></select></h2>
+    <div id="chain"></div>
+  </section>
+
+  <section class="card">
+    <h2>操作</h2>
+    <div class="grid2">
+      <div>
+        <h3>强制出块</h3>
+        <p class="note">POST /mine：立刻把交易池里的交易打包（不等定时器），广播给邻居。</p>
+        <button id="mine" class="act">对选中节点出块</button>
+      </div>
+      <div>
+        <h3>发起转账</h3>
+        <p class="note">私钥 JWK 取自 <code>bin/.network.json</code> 的 <code>funder</code> 字段（本地一次性密钥，已 gitignore）。</p>
+        <label>私钥 JWK<input id="jwk" placeholder='{"kty":"EC","crv":"P-256","x":"…","y":"…","d":"…"}' /></label>
+        <label>收款地址<input id="to" placeholder="0x…" /></label>
+        <div class="row">
+          <label>金额<input id="value" type="number" value="100" /></label>
+          <label>手续费<input id="fee" type="number" value="1" /></label>
+          <label>nonce<input id="nonce" type="number" value="0" /></label>
+        </div>
+        <button id="send" class="act">签名并广播</button>
+        <pre id="result" hidden></pre>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <span>四个必做实验：<code>node bin/experiments.mjs</code></span>
+  <span>单测：<code>node --test "test/*.test.mjs"</code></span>
+</footer>
+
+<script type="module" src="./app.js"></script>
+</body>
+</html>

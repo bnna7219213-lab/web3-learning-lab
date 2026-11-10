@@ -1,0 +1,12 @@
+{
+  "name": "p02-minichain",
+  "private": true,
+  "type": "module",
+  "description": "P02 MiniChain：零依赖多节点迷你区块链（区块/哈希链接/Merkle/签名/P2P/最长链重组/PoW-PoS 对比）",
+  "scripts": {
+    "test": "node --test \"test/*.test.mjs\"",
+    "network": "node bin/network.mjs",
+    "experiment": "node bin/experiments.mjs",
+    "panel": "node ../../tools/serve.mjs"
+  }
+}

@@ -1,0 +1,20 @@
+# 主机 B：作为 observer 加入 A 的私有网
+# 依据 README「Syncing one enclave from another」+ remote-enclave-nginx.yaml（2026-10-14）
+#
+# 运行：kurtosis run --enclave net-b github.com/ethpandaops/ethereum-package --args-file network_params/remote-observer.yaml
+participants:
+  - el_type: geth
+    cl_type: lighthouse
+    el_extra_params:
+      # README 原文陷阱：Geth snap-sync 在「刚起、状态还在长」的 devnet 上会卡
+      #   missing trie node ... layer stale
+      # 两条对策：① 这里改 full sync；② 或等 A 至少最终化 1 个 epoch 再起 B
+      - --syncmode=full
+
+network_params:
+  # 指向 A 的 nginx（默认 9090）。kt- 前缀会让包自动把验证者数置 0 → observer 模式
+  network: kt-203.0.113.10:9090    # ← 换成 A 的可路由 IP:端口
+  network_id: "3151908"            # 必须与 A 一致
+
+# B 不跑验证者（自动置 0），所以不需要助记词；若你要让 B 也参与记账，
+# 正确做法不是复制 A 的助记词，而是重新规划验证者集合后整体重建网络。

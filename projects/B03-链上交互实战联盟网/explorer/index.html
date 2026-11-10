@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>B03 · 联盟链浏览器（QBFT chainId 19880601）</title>
+<link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+<header>
+  <div>
+    <h1>B03 联盟链浏览器</h1>
+    <p class="sub">Hyperledger Besu 26.9.0 · QBFT <span id="valQuorum">检测中…</span> · 零 gas · chainId <code id="chainIdBadge">—</code>　—— 不依赖公网 Etherscan 的私有链浏览器</p>
+  </div>
+  <div class="conn">
+    <label>RPC<input id="rpcUrl" value="/b03-rpc/" readonly /></label>
+    <span id="dot" class="dot off" title="连接状态"></span>
+  </div>
+</header>
+
+<main>
+  <div id="healthBanner"></div>
+
+  <section class="stats">
+    <div class="stat"><span class="k">最新区块</span><span class="v" id="s_block">—</span></div>
+    <div class="stat"><span class="k">gasPrice</span><span class="v" id="s_gas">—</span></div>
+    <div class="stat"><span class="k">baseFeePerGas</span><span class="v" id="s_base">—</span></div>
+    <div class="stat"><span class="k">peers</span><span class="v" id="s_peers">—</span></div>
+    <div class="stat"><span class="k">验证者集合</span><span class="v" id="s_vals">—</span></div>
+    <div class="stat"><span class="k">节点在线</span><span class="v" id="s_online">—</span></div>
+  </section>
+
+  <section class="card">
+    <h2>搜索 <span class="note">交易哈希 0x… 或 区块号 / 区块哈希</span></h2>
+    <div class="search">
+      <input id="q" placeholder="0x交易哈希 / 12 / 0x区块哈希…" />
+      <button id="go" class="primary">查询</button>
+    </div>
+    <div id="detail" class="kv"></div>
+  </section>
+
+  <section class="card" id="pipeline">
+    <h2>钱包操作流水线 <span class="note">从零到链上可查 · 6 步走完，本页实时检测每步状态</span></h2>
+    <div class="pipe" id="pipe">
+      <!-- 6 步由 app.js 渲染：每步 = 序号 + 标题 + 状态点 + 说明 + 操作入口 -->
+    </div>
+    <div class="pipefoot">
+      <span class="note" id="pipeSummary">检测中…</span>
+      <a class="pipego" id="pipeNext" href="./wallet.html">打开钱包操作页 →</a>
+    </div>
+  </section>
+
+  <section class="card" id="statsCard">
+    <h2>链上统计 <span class="note">索引器聚合 · 每日交易数（柱）/ 活跃地址（折线）/ 出块数</span></h2>
+    <div class="chartwrap">
+      <svg id="statsChart" viewBox="0 0 720 220" preserveAspectRatio="xMidYMid meet"></svg>
+    </div>
+    <div class="row" id="statsLegend" style="margin-top:8px"></div>
+  </section>
+
+  <section class="card">
+    <h2>区块 <span class="note">索引器分页 · 每 5 秒自动刷新 · QBFT 单块终结，「确认数」= 各节点一致而非等待终结</span></h2>
+    <table id="blocks">
+      <thead><tr><th>#</th><th>时间</th><th>交易数</th><th>gasUsed</th><th>哈希</th></tr></thead>
+      <tbody></tbody>
+    </table>
+    <div class="row" id="blocksNav" style="margin-top:10px;align-items:center"></div>
+  </section>
+
+  <section class="card" id="tokensCard">
+    <h2>代币 <span class="note">索引器识别 ERC-20 Transfer 事件（topic0 0xddf252ad…）· 点击行查看持仓分布与转账记录</span></h2>
+    <div id="tokensView"><div class="empty">加载中…</div></div>
+  </section>
+
+  <section class="card" id="contractsCard">
+    <h2>合约 <span class="note">替代 Etherscan「Verify Contract」· 链上事实由索引器实测，源码指纹由交付方登记，客户可用 cast 独立复核</span></h2>
+    <div id="contractsView"><div class="empty">加载中…</div></div>
+  </section>
+
+  <section class="card">
+    <h2>验证者 <span class="note">qbft_getValidatorsByBlockNumber(latest) —— 这是验证者<b>集合</b>，不等于在跑的台数；在线数看上方「节点在线」</span></h2>
+    <div id="validators" class="kv"></div>
+  </section>
+</main>
+
+<footer>
+  <span>数据直连内网 Besu 节点 RPC（经 nginx <code>/b03-rpc/</code> 反代，同源无 CORS）· 无第三方索引器，逐字段解释由本页 + JSON-RPC 完成</span>
+  <span class="icp"><a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener nofollow"><ICP备案号></a></span>
+</footer>
+
+<script type="module" src="./app.js"></script>
+</body>
+</html>

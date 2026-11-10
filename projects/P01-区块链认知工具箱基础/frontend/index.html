@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>P01 · 区块链认知工具箱</title>
+<link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <span class="logo">▦</span>
+    <div>
+      <h1>区块链认知工具箱</h1>
+      <p class="sub">P01 · 零依赖 · 浏览器内置 Web Crypto · 每个 Demo 都对应一个可售卖的合规模块原理</p>
+    </div>
+  </div>
+  <div class="env" id="envInfo"></div>
+</header>
+
+<div class="layout">
+  <nav class="sidenav" id="nav" aria-label="Demo 导航"></nav>
+  <main id="view" class="view"></main>
+</div>
+
+<footer class="foot">
+  <span>运行：<code>node tools/serve.mjs</code> → <code>http://127.0.0.1:8787/projects/P01-区块链认知工具箱基础/frontend/</code></span>
+  <span>单测：<code>node --test "test/*.test.mjs"</code></span>
+</footer>
+
+<script type="module" src="./app.js"></script>
+</body>
+</html>

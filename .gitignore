@@ -1,0 +1,61 @@
+# 依赖与构建产物
+node_modules/
+dist/
+out/
+build/
+target/
+*.tsbuildinfo
+.cache/
+
+# Foundry / Hardhat
+out/
+broadcast/
+cache/
+artifacts/
+deployments/local/
+*.log
+
+# 环境与密钥：任何私钥、助记词、RPC Key 一律不入库
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+mnemonic*
+keystore/
+
+# 索引器与本地数据库
+*.sqlite
+*.db
+data/
+
+# 编辑器 / 系统
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+
+# 调试残留（对齐 lainchain 仓库净化经验：根目录只留源码与文档）
+_archive/
+tmp/
+scratch/
+*_debug.*
+
+# 本地链运行时的节点身份（含私钥 JWK），永不入库
+projects/*/bin/.network.json
+
+# vendored forge-std：只保留编译所需的 src/ 与许可证
+projects/*/lib/forge-std/.github/
+projects/*/lib/forge-std/scripts/
+projects/*/lib/forge-std/test/
+projects/*/lib/forge-std/CONTRIBUTING.md
+projects/*/lib/forge-std/package.json
+projects/*/lib/forge-std/Makefile
+projects/*/lib/forge-std/README.md
+projects/*/lib/forge-std/CHANGELOG.md
+projects/*/lib/forge-std/.gitattributes
+
+# 编辑器本地工作区（Trae 的会话/规划草稿）。设计结论已沉淀进各项目 README，
+# 不把编辑器私有目录纳入版本库。
+.trae/

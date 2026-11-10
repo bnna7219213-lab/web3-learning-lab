@@ -1,0 +1,14 @@
+{
+  "name": "b03-indexer",
+  "version": "1.0.0",
+  "private": true,
+  "description": "B03 私有联盟链轻量索引器：Node + SQLite，扫块建索引出查询 API（不依赖公网 Etherscan）",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.3.0",
+    "ethers": "^6.17.0"
+  }
+}

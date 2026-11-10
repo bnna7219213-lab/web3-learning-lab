@@ -1,0 +1,10 @@
+{
+  "name": "b03-consortium-lab",
+  "version": "1.0.0",
+  "private": true,
+  "description": "B03 联盟网：自建钱包、区块浏览器、索引器、水龙头与出证脚本的统一依赖入口",
+  "dependencies": {
+    "better-sqlite3": "^11.3.0",
+    "ethers": "^6.17.0"
+  }
+}

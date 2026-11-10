@@ -1,0 +1,89 @@
+# 单机起 4 验证者 QBFT 网（最快验证「组网是否真的成立」的路径）
+# 镜像版本固定，不用 latest：可复现性是质量门禁的一部分。
+#
+# 前置：bash scripts/20-up-docker.sh   ← 请用脚本起，它会生成 ./keys/node-N 与 .env(BOOTNODES)
+# 手起会失败的原因：每个节点必须用**不同**的节点密钥，且 bootnodes 需要真实 enode URL。
+name: consortium-qbft
+
+x-besu-common: &besu-common
+  image: hyperledger/besu:26.9.0
+  restart: unless-stopped
+  volumes:
+    - ./genesis.json:/etc/besu/genesis.json:ro
+    - ./permissions_config.toml:/etc/besu/permissions_config.toml:ro
+
+services:
+  node-1:
+    <<: *besu-common
+    volumes:
+      - ./keys/node-1:/opt/besu/nodekey:ro     # 每节点一份独立密钥
+      - node1-data:/opt/besu/data
+    command: >
+      --data-path=/opt/besu/data
+      --genesis-file=/etc/besu/genesis.json
+      --node-private-key-file=/opt/besu/nodekey/key
+            --p2p-host=172.30.0.11 --p2p-port=30303
+      --min-gas-price=0
+      --tx-pool-enable-balance-check=false
+      --rpc-http-enabled=true --rpc-http-host=0.0.0.0 --rpc-http-port=8545
+      --rpc-http-api=ETH,NET,WEB3,QBFT,PERM
+      --metrics-enabled=true --metrics-port=9545
+      --bootnodes=${BOOTNODES:-}
+    ports: ["8545:8545"]                        # 仅本机验证用；生产按 config/rpc.toml 限源
+    networks: { qbft: { ipv4_address: 172.30.0.11 } }
+
+  node-2:
+    <<: *besu-common
+    volumes:
+      - ./keys/node-2:/opt/besu/nodekey:ro
+      - node2-data:/opt/besu/data
+    command: >
+      --data-path=/opt/besu/data --genesis-file=/etc/besu/genesis.json
+      --node-private-key-file=/opt/besu/nodekey/key       --p2p-host=172.30.0.12 --p2p-port=30303
+      --min-gas-price=0 --tx-pool-enable-balance-check=false
+      --bootnodes=${BOOTNODES:-}
+    networks: { qbft: { ipv4_address: 172.30.0.12 } }
+
+  node-3:
+    <<: *besu-common
+    volumes:
+      - ./keys/node-3:/opt/besu/nodekey:ro
+      - node3-data:/opt/besu/data
+    command: >
+      --data-path=/opt/besu/data --genesis-file=/etc/besu/genesis.json
+      --node-private-key-file=/opt/besu/nodekey/key       --p2p-host=172.30.0.13 --p2p-port=30303
+      --min-gas-price=0 --tx-pool-enable-balance-check=false
+      --bootnodes=${BOOTNODES:-}
+    networks: { qbft: { ipv4_address: 172.30.0.13 } }
+
+  node-4:
+    <<: *besu-common
+    volumes:
+      - ./keys/node-4:/opt/besu/nodekey:ro
+      - node4-data:/opt/besu/data
+    command: >
+      --data-path=/opt/besu/data --genesis-file=/etc/besu/genesis.json
+      --node-private-key-file=/opt/besu/nodekey/key       --p2p-host=172.30.0.14 --p2p-port=30303
+      --min-gas-price=0 --tx-pool-enable-balance-check=false
+      --bootnodes=${BOOTNODES:-}
+    networks: { qbft: { ipv4_address: 172.30.0.14 } }
+
+  prometheus:
+    image: prom/prometheus:latest
+    volumes: ["./prometheus.yml:/etc/prometheus/prometheus.yml:ro"]
+    ports: ["9090:9090"]
+    networks: [qbft]
+
+  # 区块浏览器（Blockscout）：环境变量名随版本变化，本仓库未核实 → 部署前查 Blockscout 对应版本文档。
+  # 内网自建时记得把 ETHEREUM_JSONRPC_HTTP_URL 指向 RPC 节点，不要指向验证者。
+
+volumes:
+  node1-data: {}
+  node2-data: {}
+  node3-data: {}
+  node4-data: {}
+
+networks:
+  qbft:
+    driver: bridge
+    ipam: { config: [{ subnet: 172.30.0.0/24 }] }

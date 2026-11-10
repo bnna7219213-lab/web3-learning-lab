@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>P04 · Counter 只读面板</title>
+<link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+<header>
+  <div>
+    <h1>Counter 合约面板</h1>
+    <p class="sub">P04 · 零依赖：只用 <code>fetch</code> 直连 JSON-RPC，不引入 viem/ethers。写路径靠 anvil 的解锁账户，真实钱包接入留给 P06。</p>
+  </div>
+  <div class="conn">
+    <label>RPC URL<input id="rpc" value="http://127.0.0.1:8545" /></label>
+    <label>合约地址<input id="addr" placeholder="部署后自动填入" /></label>
+    <button id="connect" class="primary">连接并读取</button>
+  </div>
+</header>
+
+<main>
+  <section class="card">
+    <h2>网络状态</h2>
+    <div id="net" class="kv"></div>
+  </section>
+
+  <section class="card">
+    <h2>部署记录 <span class="note">deployments/latest.json</span></h2>
+    <div id="record" class="kv"></div>
+    <p class="note">指纹核对：把这里的 <code>deployedBytecodeHash</code> 与链上实际字节码哈希比对，即可证明"跑的就是这份代码"——联盟网没有公网浏览器时靠这个自证。</p>
+    <button id="verifyCode" class="act">用链上 code 复核指纹</button>
+    <div id="verifyOut" class="kv"></div>
+  </section>
+
+  <section class="card">
+    <h2>只读调用</h2>
+    <div id="views" class="kv"></div>
+    <h3>写调用（仅 anvil / 已解锁账户）</h3>
+    <p class="note">用 <code>eth_sendTransaction</code> 让节点代签（anvil 默认解锁账户）。生产/联盟网必须换成客户端签名 + 账户白名单，见 docs/02。</p>
+    <label>from（anvil 解锁账户）<input id="from" value="0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266" /></label>
+    <label>increment 增量<input id="by" type="number" value="1" /></label>
+    <button id="write" class="act">发送 increment(by)</button>
+    <pre id="txOut" hidden></pre>
+  </section>
+
+  <section class="card">
+    <h2>方法选择器 <span class="note">abi/Counter.selectors.json</span></h2>
+    <p class="note">这就是 P03 里"浏览器把 input 拆成 4 字节选择器 + 参数"的那 4 字节。</p>
+    <div id="selectors"></div>
+  </section>
+</main>
+
+<footer>
+  <span>先起链：<code>anvil</code>　再部署：<code>bash script/deploy.sh anvil</code>　最后：<code>node tools/serve.mjs</code> 打开本页</span>
+</footer>
+
+<script type="module" src="./app.js"></script>
+</body>
+</html>

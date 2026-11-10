@@ -1,0 +1,34 @@
+# 主机 A：作为「源」部署到公网/跨主机可达环境
+# 逐字依据 ethpandaops/ethereum-package README「Syncing one enclave from another」
+# 与 .github/tests/examples/source-enclave-nginx.yaml（抓取于 2026-10-14）
+#
+# 运行：kurtosis run --enclave net-a github.com/ethpandaops/ethereum-package --args-file network_params/public-internet.yaml
+participants:
+  - el_type: geth
+    cl_type: lighthouse
+  - el_type: reth
+    cl_type: teku
+
+port_publisher:
+  # 关键：必须是「别人能路由到你」的地址。
+  # 不设置时 README 明确警告：广播出去的 enode 全是 docker 内网地址，谁也连不上。
+  # 云主机填弹性公网 IP；不确定时可用 "auto"（让包自己探测）。
+  nat_exit_ip: 203.0.113.10        # ← 改成你的可路由 IP
+  el:
+    enabled: true                  # 发布 30303（eth P2P）
+  cl:
+    enabled: true                  # 发布 9000（attestation P2P）
+
+additional_services:
+  - nginx                          # 把 genesis/enodes.txt/bootstrap_nodes.yaml 挂成 http://<host>:9090
+
+network_params:
+  num_validator_keys_per_node: 16
+  network_id: "3151908"
+  # ⚠️ 换掉默认助记词（见 minimal-2nodes.yaml 的红线说明）
+  preregistered_validator_keys_mnemonic: "giant issue aisle success illegal bike spike question tent bar rely arctic volcano long crawl hungry vocal artwork sniff fantasy very lucky have athlete"
+
+# 跨主机/跨 enclave 必须持久化，否则 A 重启后身份变化，B 必须拆掉重建
+persistent: true
+el_volume_size: 100Gi
+cl_volume_size: 50Gi

@@ -1,0 +1,43 @@
+# RPC 接入节点（不验证、只对外服务）：成员与 dApp 的唯一入口
+data-path = "/var/lib/besu"
+genesis-file = "/etc/besu/genesis.json"
+node-private-key-file = "/etc/besu/key"
+
+# QBFT 由 genesis.json 的 "qbft" 段启用；Besu 没有 --qbft-enabled 选项（写上去会直接启动失败）
+p2p-host = "10.0.1.20"
+p2p-port = 30303
+bootnodes = [
+  "enode://NODE01_PUBKEY@10.0.1.11:30303",
+  "enode://NODE02_PUBKEY@10.0.1.12:30303"
+]
+discovery-enabled = false
+
+# 与验证者完全一致的零 gas 三件套
+min-gas-price = 0
+tx-pool-enable-balance-check = false
+
+# ---------- 对外 RPC：绑内网网卡 + 限源，绝不裸奔到公网 ----------
+rpc-http-enabled = true
+rpc-http-host = "10.0.1.20"      # 内网地址；公网访问一律走反向代理 + 认证
+rpc-http-port = 8545
+rpc-http-api = ["ETH", "NET", "WEB3", "QBFT", "TXPOOL"]
+rpc-http-cors-origins = ["https://portal.intranet.example"]
+rpc-gas-cap = 50000000      # 对外的 gas 上限，防单账户刷爆节点
+rpc-http-max-active-connections = 200
+rpc-ws-enabled = true
+rpc-ws-host = "10.0.1.20"
+rpc-ws-port = 8546
+rpc-ws-api = ["ETH", "NET", "WEB3"]
+
+# 权限：RPC 节点同样受白名单约束（否则白名单只挡 P2P，挡不住 RPC 直连提交）
+permissions-nodes-config-file-enabled = true
+permissions-nodes-config-file = "/etc/besu/permissions_config.toml"
+permissions-accounts-config-file-enabled = true
+permissions-accounts-config-file = "/etc/besu/permissions_config.toml"
+
+metrics-enabled = true
+metrics-host = "10.0.1.20"
+metrics-port = 9545
+
+# 只读守护：RPC 节点不做验证者，但需要更快同步时开 full 而非 fast（视版本默认值而定）
+logging = "INFO"

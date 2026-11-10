@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>B03 · 自建钱包与领币（服务器专属私链）</title>
+<link rel="stylesheet" href="./styles.css" />
+<style>
+  .warnbox{background:#2a1a0a;border:1px solid var(--warn);color:var(--warn);border-radius:8px;padding:10px 12px;font-size:13px}
+  .secret{background:#1a0f0f;border:1px dashed #e5484d;color:#ff8a8a;padding:8px;border-radius:6px;word-break:break-all;font-family:var(--mono);font-size:13px}
+  .row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+  .row button{flex:0 0 auto}
+  .big{font-size:16px;color:var(--ok);font-family:var(--mono)}
+  a.nav{color:var(--acc);text-decoration:none;margin-right:14px;font-size:13.5px}
+  a.nav:hover{text-decoration:underline}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>B03 自建钱包 · 服务器专属私链领币</h1>
+    <p class="sub">私链没有公共水龙头——币来自 <b>genesis alloc 预分配</b> 或 <b>本链水龙头（运营方账户签名）</b>　·
+      <a class="nav" href="/b03/">← 区块浏览器</a></p>
+  </div>
+  <div class="conn">
+    <label>RPC<input id="rpcUrl" value="/b03-rpc/" readonly /></label>
+    <span id="dot" class="dot off"></span>
+  </div>
+</header>
+
+<main>
+  <section class="card" id="secCreate">
+    <h2>① 钱包：生成地址 <span class="note">地址生成是纯本地计算（secp256k1），不依赖任何链、不需要联网</span></h2>
+    <div class="warnbox">⚠️ 这是<b>一次性学习钱包</b>：仅用于本私链。助记词/私钥一旦泄露，链上资产（虽然是教学币）归泄露方。请复制保存后再使用。<br>
+      持钥边界：本页把私钥以<b>明文</b>存在本机浏览器 <code>localStorage</code>，<b>任何真实价值不得放在这种持钥方式上</b>。默认不再把私钥/助记词渲染到页面上，需要时按「显示私钥/助记词」。</div>
+    <div class="row">
+      <button id="btnCreate" class="primary">生成新钱包</button>
+      <input id="importKey" placeholder="或粘贴已有私钥 / 助记词后导入" style="flex:1;min-width:260px" />
+      <button id="btnImport">导入</button>
+    </div>
+    <div id="walletInfo" class="kv" style="margin-top:10px"></div>
+    <div class="row">
+      <button id="btnUse" class="primary" hidden>使用此钱包（本机保存）</button>
+      <button id="btnCopyAddr">复制地址（提取到剪贴板）</button>
+      <button id="btnWipe">清除本机保存的钱包</button>
+    </div>
+  </section>
+
+  <section class="card" id="secClaim">
+    <h2>② 领取 B03 币 <span class="note">服务器专属水龙头 · POST /b03-faucet/claim · 每地址 60s 冷却</span></h2>
+    <p class="note">替代公链 faucet 的位置；私链链下发放方是 <b>genesis alloc 的运营方账户</b>（余额恒定，不依赖任何外部区块链）。</p>
+    <div class="row">
+      <span id="claimAddr" class="big">未连接钱包</span>
+      <button id="btnClaim" class="primary" disabled>领取 10 B03</button>
+      <button id="btnRefresh">刷新余额</button>
+    </div>
+    <div id="claimOut" class="kv" style="margin-top:10px"></div>
+  </section>
+
+  <section class="card" id="secBal">
+    <h2>③ 余额与状态 <span class="note">eth_getBalance / eth_getTransactionCount · 零 gas 链 gasPrice=0</span></h2>
+    <div id="bal" class="kv"></div>
+  </section>
+
+  <section class="card" id="secSend">
+    <h2>④ 发交易（零 gas：0 值交易无需余额；转账面值仍需 balance ≥ value） <span class="note">客户端私钥签名 → eth_sendRawTransaction，无需节点代签</span></h2>
+    <div class="row">
+      <input id="toAddr" placeholder="收款地址 0x…" style="flex:1;min-width:280px" />
+      <input id="amt" type="number" value="1" min="0" step="0.1" style="width:120px" title="金额 B03" />
+      <button id="btnSend" class="primary" disabled>签名并发送</button>
+      <button id="btnShowPriv" title="默认不渲染私钥/助记词：明文出现在 DOM 里会被浏览器插件、存档、肩窥拿走">显示私钥/助记词</button>
+    </div>
+    <div id="txOut" class="kv" style="margin-top:10px"></div>
+    <p class="note">本链链 ID <code>19880601</code>，gasLimit=21000，gasPrice=0——<b>零 gas 免的是手续费（gas 余额检查），不是本金</b>：0 值交易/存证无需余额即可发；转账面值仍要求 <code>balance ≥ value</code>，不能转出多于余额的币。</p>
+  </section>
+
+  <section class="card" id="secRecon">
+    <h2>⑤ 双向对账 <span class="note">"我发出了"≠"对方收到了"：本区同时核对两侧余额增量。<b>查对方余额只需要它的地址，不需要它的私钥</b></span></h2>
+    <div id="recon" class="kv"><div class="k">双向对账</div><div class="v note">尚未转账。发出交易后这里会同时给出「付款方减少了多少」和「收款方增加了多少」两个数，以及一致与否的判定。</div></div>
+    <div id="watch" style="margin-top:10px"></div>
+    <div class="row">
+      <input id="watchAddr" placeholder="添加观察地址 0x…（对方/收款方，只要地址即可）" style="flex:1;min-width:300px" />
+      <button id="btnWatch">加入观察</button>
+      <button id="btnWatchRefresh">刷新观察余额</button>
+    </div>
+  </section>
+
+  <section class="card" id="secVerify">
+    <h2>⑥ 自查与验证 <span class="note">无需 Etherscan：本链浏览器逐字段查</span></h2>
+    <div class="kv" id="verify"></div>
+  </section>
+</main>
+
+<footer>
+  <span>钱包页与浏览器同源部署 · RPC 经 nginx /b03-rpc/ · 领币接口经 /b03-faucet/ · 密钥只在浏览器内存与 localStorage，不上传服务器</span>
+  <span class="icp"><a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener nofollow"><ICP备案号></a></span>
+</footer>
+
+<script src="./ethers.umd.min.js"></script>
+<script type="module" src="./wallet.js"></script>
+</body>
+</html>

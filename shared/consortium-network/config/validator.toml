@@ -1,0 +1,53 @@
+# Besu Validator 节点配置（QBFT + 零 gas + 权限白名单）
+# 键名逐字核对 docs/public-networks/reference/options.md 与 docs/private-networks/reference/options.md（2026-10-14）
+# ⚠️ Besu 对 config.toml 中的未知键会直接启动失败 —— 原方案的 rpc-http-apis 多一个 s 就属于这类致命错误。
+
+data-path = "/var/lib/besu"
+genesis-file = "/etc/besu/genesis.json"
+node-private-key-file = "/etc/besu/key"
+
+# ---------- 共识 ----------
+# QBFT 由 genesis.json 的 "qbft" 段启用；Besu 没有 --qbft-enabled 选项（写上去会直接启动失败）
+
+# ---------- 网络 ----------
+p2p-host = "10.0.1.11"          # 本节点内网 IP（跨机房部署时这里错了就组不起网）
+p2p-port = 30303
+bootnodes = [
+  "enode://NODE01_PUBKEY@10.0.1.11:30303",
+  "enode://NODE02_PUBKEY@10.0.1.12:30303"
+]
+# 联盟链必须开发现限制，否则任何人都能连进来打听节点拓扑
+discovery-enabled = false
+
+# ---------- 零 gas 三件套（每个节点都要一致，漏一个就"交易静默消失"）----------
+min-gas-price = 0
+tx-pool-enable-balance-check = false
+#  ↑ free-gas 文档第 5 步：默认 true 会让零余额成员账户的交易进不了 txpool 优先层
+
+# ---------- RPC：验证者节点只绑本机 ----------
+rpc-http-enabled = true
+rpc-http-host = "127.0.0.1"      # 不是 0.0.0.0！对外服务由 RPC 节点承担
+rpc-http-port = 8545
+rpc-http-api = ["ETH", "NET", "WEB3", "QBFT", "ADMIN", "PERM"]
+#            ↑ 正确键名是 rpc-http-api（单数无 s）
+rpc-http-cors-origins = []       # 留空：不允许任何浏览器跨源直连验证者
+
+graphql-http-enabled = false
+ws-enabled = false               # 验证者不对外提供 WS，订阅走 RPC 节点
+
+# ---------- 权限（节点 + 账户双白名单）----------
+permissions-nodes-config-file-enabled = true
+permissions-nodes-config-file = "/etc/besu/permissions_config.toml"
+permissions-accounts-config-file-enabled = true
+permissions-accounts-config-file = "/etc/besu/permissions_config.toml"
+# 新版 Besu 也支持单一 permissions-configuration-file；两者选其一，混用容易自相矛盾
+
+# ---------- 指标：限源，不要 0.0.0.0 ----------
+metrics-enabled = true
+metrics-host = "10.0.1.11"       # 绑内网网卡；原方案 0.0.0.0 会把指标暴露到防火墙可达面
+metrics-port = 9545
+metrics-category = ["ETH", "PEERS", "MEMORY", "SYNCHRONIZER", "RPC", "TXPOOL"]
+
+# ---------- 日志 ----------
+logging = "INFO"
+log-outputs = ["console"]
