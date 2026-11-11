@@ -1,0 +1,11 @@
+{
+  "createProposal(string,uint256)": "35facf78",
+  "getProposal(uint256)": "c7f758a8",
+  "hasVoted(uint256,address)": "43859632",
+  "owner()": "8da5cb5b",
+  "proposalCount()": "da35c664",
+  "renounceOwnership()": "715018a6",
+  "tally(uint256)": "ed8b6b31",
+  "transferOwnership(address)": "f2fde38b",
+  "vote(uint256,bool)": "c9d27afe"
+}

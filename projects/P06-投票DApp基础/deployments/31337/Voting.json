@@ -1,0 +1,12 @@
+{
+  "address": "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6",
+  "admin": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+  "chainId": 31337,
+  "contract": "Voting",
+  "deployedBytecodeHash": "0xbc85c0c757c771bf90d7074b999c4be6ca1dd9e3c2563c3014d1e14c11748fb2",
+  "deployer": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+  "evmVersion": "cancun",
+  "foundryProfile": "default",
+  "networkProfile": "anvil",
+  "rpcUrl": "http://127.0.0.1:8545"
+}
