@@ -42,6 +42,7 @@ have git   && row OK "git" "$(ver git --version)"     || row WARN "git" "未安�
 have java    && row OK "java"    "$(java -version 2>&1 | head -1)" || row WARN "java" "未安装（Spring Boot BFF / 盟链 SDK 需要）"
 have python  && row OK "python"  "$(ver python --version)"         || row WARN "python" "未安装（indexer 原型脚本用）"
 have docker  && row OK "docker"  "$(ver docker --version)"         || row WARN "docker" "未安装（可选：起本地链/Postgres）"
+if have besu; then row OK "besu" "$(besu --version 2>/dev/null | head -1)"; else row WARN "besu" "未安装（联盟网/B 线需要：下载与 sha256 校验见 shared/consortium-network/scripts/00-preflight.sh）"; fi
 
 echo
 # --- 安全门禁：私钥不得入库 ---
@@ -68,5 +69,5 @@ fi
 
 echo
 echo "== 汇总：OK $ok · WARN $warn · MISS $miss =="
-[ "$miss" -eq 0 ] && echo "结论：可以开工 P01/P02。" || echo "结论：请先补齐 MISS 项（尤其 forge/anvil）。"
+[ "$miss" -eq 0 ] && echo "结论：P01–P06 均可开工；联盟网与 B 线另需 besu + JDK25（见 WARN 项）。" || echo "结论：请先补齐 MISS 项（尤其 forge/anvil）。"
 exit 0

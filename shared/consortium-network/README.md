@@ -1,9 +1,11 @@
 # shared/consortium-network · Besu QBFT 联盟链网络层
 
 > 定位：B03–B08 分支项目的**共用网络底座**。P 分支用 anvil/Sepolia，B 分支全部指向这里。
-> 状态：**服务器已装 Besu 26.9.0（Oracle JDK 25.0.4.1 LTS，/opt/besu/bin/besu）**；配置与脚本逐条核对官方文档，
-> 但本仓库开发机（Windows，无 Docker/Besu）**仍未实机运行过** —— 首次实跑请在服务器执行并把输出贴回来修正。
-> 校准依据：Besu 26.9.0 官方文档 + 服务器实测反馈，2026-10-14。逐条判定见 `docs/01-方案校准清单.md`。
+> 状态：**服务器已装 Besu 26.9.0（Oracle JDK 25.0.4.1 LTS，/opt/besu/bin/besu）**；
+> **2026-11-11 起 Windows/Git Bash 开发机也已实跑通**（4 验证者、冒烟 5/5，P03/P04/P05 均部署实测）。
+> Windows 两处注意：`JAVA_HOME` 必须指向 JDK 25+（Besu 启动器认它而非 PATH）；
+> `21-up-native.sh` 已改传 bootnodes 文件绕过 Besu 26.9.0 的 Windows enode 路径解析崩溃。
+> 校准依据：Besu 26.9.0 官方文档 + 服务器实测反馈，2026-10-14；Windows 实跑修正 2026-11-11。逐条判定见 `docs/01-方案校准清单.md`。
 
 ## 〇、环境要求（实测修正）
 

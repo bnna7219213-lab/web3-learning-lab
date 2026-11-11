@@ -12,7 +12,9 @@
 | 认知基础 | `projects/P01` | 哈希雪崩、哈希链、Merkle 树与批量出证、签名防重放——**零依赖纯 Node**，19 项单测 |
 | 自己写一条链 | `projects/P02` | MiniChain：3 节点组网、广播、共识、分叉重组，25 项单测 + 4 条验收实验 |
 | 链上交互 | `projects/P03` | 交易生命周期手册：建钱包→领水→转账→逐字段解析，8+2 笔联盟网实测交易（含失败案例），零公链依赖 |
-| 合约工程 | `projects/P04`–`P08`、`P20`–`P25` | Foundry 编写 / 测试 / 部署 / 升级 / 审计 |
+| ERC20 合约 | `projects/P05` | LabToken：Permit/角色/上限/舍入视图，36 项测试（fuzz+invariant）覆盖率 100%，anvil+联盟网双部署 |
+| 全栈 DApp | `projects/P06` | 投票闭环：React+Wagmi+双钱包路径（MetaMask / anvil 演示钱包），事件驱动实时刷新，浏览器 E2E 实测 |
+| 合约工程 | `projects/P04`–`P08`、`P20`–`P25` | Foundry 编写 / 测试 / 部署 / 升级 / 审计（P04/P05/P06 已完成实测） |
 | **真实联盟网** | `shared/consortium-network` | Besu + QBFT 四验证者本地组网、创世生成、加成员、冒烟测试 |
 | **自建钱包 + 联盟链浏览器** | `projects/B03` | 没有 MetaMask、没有 Etherscan、没有公链 faucet 的情况下，把「建账户 → 领币 → 发交易 → 逐字段自查」走通 |
 | 联盟链上的真实故障 | `projects/B04` | 卡池交易、EIP-1559 费用下限、PUSH0 与 evmVersion、同 nonce 替换解锁 |
@@ -33,24 +35,35 @@ cd projects/P02-MiniChain迷你区块链基础
 node --test "test/*.test.mjs" && node bin/experiments.mjs
 ```
 
-Foundry 部分：`cd projects/P04-HelloContract基础 && forge build && forge test -vvv`。
+Foundry 部分（P04/P05/P06 均已本机实测）：
+
+```bash
+cd projects/P04-HelloContract基础 && forge test    # 11 项
+cd ../P05-ERC20代币基础     && forge test          # 36 项（4×500 轮 fuzz + invariant）
+cd ../P06-投票DApp基础      && forge test          # 13 项；前端 cd frontend && npm install && npm run dev
+```
 
 ## 3. 本地跑起联盟链 + 自建钱包 + 浏览器（完整闭环）
 
-前置：Besu 26.9+、JDK 21+、Node 20+。全程 `127.0.0.1`，不对外。
+前置：Besu 26.9+、**JDK 25+**（Besu 26.9.0 实测要求；注意 `JAVA_HOME` 也要指向它）、Node 20+。全程 `127.0.0.1`，不对外。
+2026-11-11 已在 Windows/Git Bash 本机实跑通（4 验证者、冒烟 5/5）；Linux 服务器形态见 B03 README。
 
 ```bash
 cd shared/consortium-network
 bash scripts/00-preflight.sh
+cp genesis/qbftConfigFile.json.tpl genesis/qbftConfigFile.json   # 填 admin 地址（无 0x 前缀）
 bash scripts/10-genesis.sh ./networkFiles          # 生成 4 验证者 QBFT 创世与节点密钥
 bash scripts/21-up-native.sh                       # 幂等拉起；重跑不会洗链
 bash scripts/30-smoke-test.sh                      # RPC 连通 + 出块断言
 
 cd ../../projects/B03-链上交互实战联盟网
 npm install                                        # ethers + better-sqlite3（装在项目根，见下方说明）
-node scripts/01-deploy-demo-token.js               # 部署演示 ERC-20（可选）
-node indexer/server.js                             # 索引器 + 查询 API（127.0.0.1:8570）
-node faucet/server.js                              # 服务器专属水龙头（127.0.0.1:8560）
+node scripts/01-deploy-demo-token.js               # 部署演示 ERC-20（可选；需 FAUCET_ENV 指向含 FAUCET_PK 的 .env）
+# Windows 本机：/opt 默认路径不可写，用环境变量把运行时数据落进项目内（data/ 已 gitignore）
+DB_PATH="$PWD/indexer/data/index.db" PUBLIC_BASE="http://127.0.0.1:8080" \
+  EVIDENCE_KEYS="$PWD/indexer/data/evidence-keys" WATCHDOG_STATE="$PWD/indexer/data/watchdog-state.json" \
+  node indexer/server.js                           # 索引器 + 查询 API（127.0.0.1:8570）
+FAUCET_PK=<仓库根 .env 的运营私钥> node faucet/server.js   # 水龙头（127.0.0.1:8560）
 node ../../tools/serve-lab.mjs                     # → http://127.0.0.1:8080/b03/wallet.html
 ```
 
@@ -121,10 +134,9 @@ RPC=http://127.0.0.1:8551 node scripts/verify-transfer-both-sides.js
 web3_learning_lab/
 ├── README.md · roadmap.md · 知识点思维导图.md
 ├── docs/
-│   ├── S1-区块链基础/ … S7-毕业项目/     # 每阶段原理文与复盘
-│   └── 00-预备/                          # 仅保留预备知识，商业模块已剔除
+│   ├── S1-区块链基础/ … S7-毕业项目/     # 每阶段原理文与复盘（S1/S2 已有实测文档索引）
 ├── projects/
-│   ├── P01…P26/                          # 学习线（A 线）
+│   ├── P01…P26/                          # 学习线（A 线）：P01–P06 已完成实测
 │   ├── B03…B08/                          # 联盟网分支（B 线）：自建钱包、浏览器、出证
 │   └── G1…G6-毕业项目/
 ├── shared/
@@ -132,7 +144,7 @@ web3_learning_lab/
 │   ├── evidence/                         # 可独立复核的证据包（Merkle v2 + P-256）
 │   └── contracts-lib · frontend-lib · indexer-templates · scripts
 ├── templates/                            # 项目启动模板
-└── tools/                                # check-env.sh · serve.mjs · README 生成器
+└── tools/                                # check-env.sh · serve.mjs · serve-lab.mjs · README 生成器
 ```
 
 ## 8. 已知限制（不假装完美）
@@ -142,4 +154,10 @@ web3_learning_lab/
 - 联盟链的**生产级运维**（systemd 托管、nginx 反代、告警、容量约束）在本公开版里被移出，
   因此这里能学「怎么把链跑起来」，学不到「怎么在生产环境里不把它跑挂」；
 - 钱包页仍是**单钱包槽位**（多账户未实现），私钥存浏览器明文——定位是教学，不是托管；
-- 本链零容错形态（3 验证者 / quorum 3）是**资源约束下的妥协**，不是推荐拓扑。
+- 本链零容错形态（3 验证者 / quorum 3）是**资源约束下的妥协**，不是推荐拓扑；
+- **公网测试网 faucet 已不可用**（2026-11-11 多轮实测：接口被禁/需充值/额度领光），
+  P03 经用户授权改由联盟网水龙头接管全流程；Sepolia 流程保留为可选附录，待 faucet 恢复补做；
+- P06 的 **MetaMask 路径配置就绪但未实测**（自动化浏览器无扩展）；E2E 走同一 EIP-1193 接口的
+  anvil 演示钱包，真实 MetaMask 验收留待有扩展的环境人工补一次；
+- Besu 26.9.0 在 Windows 上 `--bootnodes` 传 enode 串会崩（路径解析 bug），
+  `21-up-native.sh` 已改传 enode 文件绕过——Linux 行为不变。

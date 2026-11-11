@@ -9,7 +9,7 @@
 cd projects/P04-HelloContract基础
 
 forge build                      # 编译（solc 0.8.28）
-forge test -vv                   # 10 项测试（含 2 个 500 轮 fuzz）
+forge test -vv                   # 11 项测试（含 2 个 500 轮 fuzz）
 
 anvil                            # 另开终端起本地链
 bash script/deploy.sh anvil      # 部署 + 写 deployments/31337/Counter.json + 导出 ABI
