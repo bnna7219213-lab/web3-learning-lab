@@ -54,7 +54,7 @@ P04-HelloContract基础/
 
 - Solidity 0.8.28 + Foundry 1.7.1 + forge-std v1.9.6（vendored 在 `lib/`，非 submodule）
 - 前端：原生 ES Module + `fetch`，零依赖（P06 才引入 Wagmi/Viem 与钱包）
-- 网络：anvil（已实测）· Sepolia（配置就绪，待领水）· Besu QBFT（配置就绪，待服务器实跑）
+- 网络：anvil（已实测，零私钥解锁账户路径）· Sepolia（配置就绪，待领水）· Besu QBFT（2026-11-11 本机实测通过，`env/consortium.env`）
 
 ## 验收（实测记录，2026-10-14）
 

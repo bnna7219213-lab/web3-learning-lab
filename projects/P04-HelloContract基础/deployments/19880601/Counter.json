@@ -1,0 +1,16 @@
+{
+  "address": "0x7a02A7A0d43A06fD5a034ceD4973c99c83753DB5",
+  "admin": "0xD9cb13A2737416E424fb70842d92503bfbf45985",
+  "chainId": 19880601,
+  "constructorInitial": 7,
+  "contract": "Counter",
+  "deployedBytecodeHash": "0x7d31d4ad0b800a4c2198a4e538aa5db8022ba369b936c0dea5eb82a9ec8e62b8",
+  "deployer": "0xD9cb13A2737416E424fb70842d92503bfbf45985",
+  "evmVersion": "london",
+  "explorerUrl": "",
+  "foundryProfile": "consortium",
+  "networkProfile": "consortium",
+  "rpcUrl": "http://127.0.0.1:8551",
+  "verifiableOnExplorer": false,
+  "version": "1.0.0"
+}

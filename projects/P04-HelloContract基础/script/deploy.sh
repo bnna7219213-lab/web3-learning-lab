@@ -33,6 +33,14 @@ if [ -z "${DEPLOYER_PRIVATE_KEY:-}" ]; then
   echo "⚠️ 没有 DEPLOYER_PRIVATE_KEY：将用 forge 默认账户（只有 anvil 能用这条路径）"
 fi
 
+# anvil 无私钥路径（2026-11-11 补，与 P05 一致）：forge 默认 sender 0x1804… 不在 anvil 账户表里，
+# 直接广播会被拒；改用节点解锁的 0 号账户 + --unlocked 走 eth_sendTransaction，全程零私钥。
+SENDER_ARGS=()
+if [ -z "${DEPLOYER_PRIVATE_KEY:-}" ] && [ "$PROFILE" = "anvil" ]; then
+  SENDER_ARGS=(--sender 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266 --unlocked)
+  echo "   anvil 解锁账户 0xf39F…2266 + --unlocked（零私钥）"
+fi
+
 echo "== profile=$PROFILE  rpc=$RPC_URL  chainId=$CHAIN_ID  gas=$GAS_MODE =="
 
 # 编译 profile 与网络 profile 对齐：联盟网是 London 级链，用 cancun 字节码会因 PUSH0 而部署失败。
@@ -52,7 +60,7 @@ if [ "$MODE" = "--dry-run" ]; then
   exit 0
 fi
 
-ARGS=(script/Deploy.s.sol:Deploy --rpc-url "$RPC_URL" --broadcast --slow -vv)
+ARGS=(script/Deploy.s.sol:Deploy --rpc-url "$RPC_URL" --broadcast --slow -vv "${SENDER_ARGS[@]}")
 # 联盟链零 gas：必须 legacy + 显式 0。
 # 2026-10-16 实测：只给 `--gas-price 0` 不够——forge 仍按 EIP-1559 发，并把
 # maxFeePerGas/maxPriorityFeePerGas 定在 1 wei（它不接受 0 的费用估算）。结果交易

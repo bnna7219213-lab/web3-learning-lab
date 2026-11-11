@@ -1,0 +1,16 @@
+{
+  "address": "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9",
+  "admin": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+  "cap": "1000000000000000000000000",
+  "chainId": 31337,
+  "contract": "LabToken",
+  "deployedBytecodeHash": "0x4af7e4741951f8f595a745796f23e3d89a1f0b0b51a786a519f59c888f6261f4",
+  "deployer": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+  "evmVersion": "cancun",
+  "foundryProfile": "default",
+  "initialMint": "100000000000000000000000",
+  "networkProfile": "anvil",
+  "rpcUrl": "http://127.0.0.1:8545",
+  "verifiableOnExplorer": false,
+  "version": "1.0.0"
+}
