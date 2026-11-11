@@ -58,6 +58,12 @@ if [ "$FRESH" = "--fresh" ] || [ "${FORCE:-0}" = "1" ]; then
 fi
 mkdir -p "$RUN"
 
+# Windows 兼容（2026-11-11 本机实测）：Besu 26.9.0 的 BootnodeResolver 对每个 --bootnodes 值
+# 先调 Paths.get(value) 试探"是不是文件"。Windows 上 enode://… 的冒号直接抛
+# InvalidPathException（Linux 文件名允许冒号，静默落回 raw-string 分支，所以服务器上没暴露）。
+# 改传文件路径（一行一个 enode）走 readPathLines 分支，两个平台行为一致。
+echo "$BOOT" | tr ',' '\n' > "$RUN/bootnodes.txt"
+
 PIDS=""
 for i in 0 1 2 3; do
   n=$((i + 1))
@@ -78,7 +84,7 @@ for i in 0 1 2 3; do
     --genesis-file="$NET/genesis.json" \
     --node-private-key-file="$node_dir/key" \
     --p2p-host="$P2P_IP" --p2p-port=$((BASE_P2P + i)) \
-    --bootnodes="$BOOT" \
+    --bootnodes="$RUN/bootnodes.txt" \
     --min-gas-price=0 \
     --tx-pool-enable-balance-check=false \
     --rpc-http-enabled=true --rpc-http-host=127.0.0.1 --rpc-http-port=$((BASE_RPC + i)) \
@@ -93,7 +99,6 @@ for i in 0 1 2 3; do
   echo "  node-$n  pid=$pid  p2p=$((BASE_P2P + i))  rpc=http://127.0.0.1:$((BASE_RPC + i))"
 done
 echo "$PIDS" | tr -d ' ' > "$RUN/pids"
-echo "$BOOT" > "$RUN/bootnodes.txt"
 
 echo
 echo "等待 25 秒让节点互相发现并出块…"

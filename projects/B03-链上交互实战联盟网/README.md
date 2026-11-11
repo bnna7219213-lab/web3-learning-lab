@@ -60,6 +60,8 @@ RPC=http://127.0.0.1:8551 bash scripts/30-smoke-test.sh
 **服务清单**：
 
 - 钱包+领币页：`http://<your-domain.example>/b03/wallet.html`（源码 `explorer/wallet.html|wallet.js`，ethers UMD 同目录本地加载）
+  - `explorer/ethers.umd.min.js` 已 vendored 入库（MIT，来自 `ethers@6.17 dist/`，2026-11-11 补——公开仓库剥离时曾缺失，
+    导致钱包页 404 静默失效；升级 ethers 时从 `node_modules/ethers/dist/` 重新拷贝）
 - 水龙头：`/opt/b03-faucet/server.js`，systemd `b03-faucet.service`（开机自启，MemoryMax=180M），监听 127.0.0.1:8560，nginx `/b03-faucet/` 反代
 - 水龙头私钥：**服务器本地生成**（`/opt/b03-faucet/.env`，600 权限，不经网络传输）；资金由运营方账户一次性充值（`faucet/` 里有充值脚本思路，私钥只在本机运行时从 `.env` 读取）
 

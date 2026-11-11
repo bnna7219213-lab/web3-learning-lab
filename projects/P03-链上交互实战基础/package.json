@@ -1,0 +1,10 @@
+{
+  "name": "p03-onchain-interaction",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "P03 链上交互实战：建钱包→领水→转账→失败案例→逐字段解析（联盟网接管版，见 README）",
+  "dependencies": {
+    "ethers": "^6.17.0"
+  }
+}

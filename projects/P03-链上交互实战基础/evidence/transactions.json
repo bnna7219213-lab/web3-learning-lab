@@ -1,0 +1,460 @@
+{
+  "generatedAt": "2026-11-11T04:43:37.081Z",
+  "environment": "consortium-qbft-local",
+  "environmentNote": "2026-11-11 用户授权：公网测试网 faucet 不可用，领币环节由 B03 联盟网水龙头接管；公网测试网为可选附录。",
+  "chainId": 19880601,
+  "rpc": "http://127.0.0.1:8551",
+  "tokenAddress": "0xD7eb578095D84a878cCF2794A93dAf20801186ed",
+  "wallets": {
+    "learner": "0x035aD5435bC643A7de0A62690702817b6d912367",
+    "payee": "0x24d783421B4D15b06CfF1819a69D7f3379d919cE",
+    "empty": "0xC37982a361D96B09A77EFa5A5B52c58013c970af"
+  },
+  "cases": [
+    {
+      "title": "T1 · 水龙头领币（运营方 → 学习钱包，10 B03）",
+      "hash": "0xc159fcbbb9161ef96f8911b32bfff4c015129537716f6b1f56be5108c85fccf1",
+      "lifecycle": {
+        "chainId": 19880601,
+        "type": 0,
+        "typeName": "legacy（EIP-155）",
+        "nonce": 6,
+        "from": "0xD9cb13A2737416E424fb70842d92503bfbf45985",
+        "to": "0x035aD5435bC643A7de0A62690702817b6d912367",
+        "valueWei": "10000000000000000000",
+        "valueB03": "10.0",
+        "gasLimit": "21000",
+        "gasPriceWei": "0",
+        "maxFeePerGas": null,
+        "maxPriorityFeePerGas": null,
+        "input": {
+          "selector": null,
+          "note": "空 input：原生转账（或纯 value 交易）"
+        },
+        "rawData": "0x",
+        "signature": {
+          "v": 28,
+          "r": "0x41d7526765849ab188e7ab131937d0f275217d476ccd0e1ebd17613c4d96499a",
+          "s": "0x592fcad77132fed1aed4688491d81d46ec9114c7659b64ad1f22e4c6739db244",
+          "eip155Digest": "0x90e641fa7b5d411a1d10cbce020826011e429bd725fc0170cbac8b8b5985bc6d",
+          "recoveredFrom": "0xD9cb13A2737416E424fb70842d92503bfbf45985",
+          "recoveryMatchesFrom": true
+        }
+      },
+      "receipt": {
+        "status": 1,
+        "statusMeaning": "成功（EVM 执行未 revert）",
+        "gasUsed": "21000",
+        "effectiveGasPriceWei": "0",
+        "feeWei": "0",
+        "cumulativeGasUsed": "21000",
+        "transactionIndex": 0,
+        "logs": [],
+        "revertReason": null
+      },
+      "block": {
+        "number": 125,
+        "hash": "0x999eebad3d71bd9a98fef95253cef3a57b47f7d19b508fbc3f73b98dc1efd445",
+        "timestamp": 1794372186,
+        "timestampISO": "2026-11-11T04:43:06.000Z",
+        "proposer": "0x9de4De69C1b85eC62cd3c65A9DdbAbF6F0B18585",
+        "txCount": 1
+      },
+      "finality": {
+        "model": "QBFT 确定性终结",
+        "confirmations": 7,
+        "note": "入块即最终：≥quorum(3/4) 验证者签过 commit 证书，不存在公链式重组。confirmations 只是链头距离，不是安全参数。"
+      }
+    },
+    {
+      "title": "T2 · 原生转账（学习钱包 → 收款方，2.5 B03）",
+      "hash": "0x05819882fe6bbcfcf782b61171d327f5358af09064a1f0b7a9664dfd28139cbf",
+      "lifecycle": {
+        "chainId": 19880601,
+        "type": 0,
+        "typeName": "legacy（EIP-155）",
+        "nonce": 6,
+        "from": "0x035aD5435bC643A7de0A62690702817b6d912367",
+        "to": "0x24d783421B4D15b06CfF1819a69D7f3379d919cE",
+        "valueWei": "2500000000000000000",
+        "valueB03": "2.5",
+        "gasLimit": "21000",
+        "gasPriceWei": "0",
+        "maxFeePerGas": null,
+        "maxPriorityFeePerGas": null,
+        "input": {
+          "selector": null,
+          "note": "空 input：原生转账（或纯 value 交易）"
+        },
+        "rawData": "0x",
+        "signature": {
+          "v": 28,
+          "r": "0xfe04dcff6889e2e09388ff0c7e0f1328d9a2b53fa1f7de10bf4860679e0e24b8",
+          "s": "0x573b7fd14b4204da1437b0f5c07ea61618e594aa8b053a1f1ae39c011e742d9a",
+          "eip155Digest": "0x318a5ac8404b958de9ba21b4224e8e29fbba174e59305fbb2b930d3b2a3eca72",
+          "recoveredFrom": "0x035aD5435bC643A7de0A62690702817b6d912367",
+          "recoveryMatchesFrom": true
+        }
+      },
+      "receipt": {
+        "status": 1,
+        "statusMeaning": "成功（EVM 执行未 revert）",
+        "gasUsed": "21000",
+        "effectiveGasPriceWei": "0",
+        "feeWei": "0",
+        "cumulativeGasUsed": "21000",
+        "transactionIndex": 0,
+        "logs": [],
+        "revertReason": null
+      },
+      "block": {
+        "number": 126,
+        "hash": "0x2d53834e8b06cd61ebdc87aa91290e453439fde2ada0ada658255e74e26bbb05",
+        "timestamp": 1794372191,
+        "timestampISO": "2026-11-11T04:43:11.000Z",
+        "proposer": "0xB4e210662463C6747Fd235106995C4f9C50b1728",
+        "txCount": 1
+      },
+      "finality": {
+        "model": "QBFT 确定性终结",
+        "confirmations": 6,
+        "note": "入块即最终：≥quorum(3/4) 验证者签过 commit 证书，不存在公链式重组。confirmations 只是链头距离，不是安全参数。"
+      }
+    },
+    {
+      "title": "T3 · 合约部署（DemoToken，to=null）",
+      "hash": "0x400e88e20c16d74f63add4d0ee530946135c504eb02b92deb593ad52108add14",
+      "lifecycle": {
+        "chainId": 19880601,
+        "type": 0,
+        "typeName": "legacy（EIP-155）",
+        "nonce": 7,
+        "from": "0xD9cb13A2737416E424fb70842d92503bfbf45985",
+        "to": null,
+        "valueWei": "0",
+        "valueB03": "0.0",
+        "gasLimit": "3000000",
+        "gasPriceWei": "0",
+        "maxFeePerGas": null,
+        "maxPriorityFeePerGas": null,
+        "input": {
+          "selector": "0x60806040",
+          "note": "未登记的选择器（联盟网里没有 4byte.directory，需自己登记 ABI）"
+        },
+        "rawData": "0x6080604052348015600f57600080fd5b50600180546001600160a01b031916331790556106b0806100316000396000f3fe608060405234801561001057600080fd5b50600436106100a95760003560e01c806340c10f191161007157806340c10f191461015357806370a08231146101685780638da5cb5b1461018857806395d89b41146101b3578063a9059cbb146101d6578063dd62ed3e146101e957600080fd5b806306fdde03146100ae578063095ea7b3146100ec57806318160ddd1461010f57806323b872dd14610126578063313ce56714610139575b600080fd5b6100d6604051806040016040528060098152602001682232b6b7aa37b5b2b760b91b81525081565b6040516100e39190610518565b60405180910390f35b6100ff6100fa366004610582565b610214565b60405190151581526020016100e3565b61011860005481565b6040519081526020016100e3565b6100ff6101343660046105ac565b610281565b610141601281565b60405160ff90911681526020016100e3565b610166610161366004610582565b610334565b005b6101186101763660046105e9565b60026020526000908152604090205481565b60015461019b906001600160a01b031681565b6040516001600160a01b0390911681526020016100e3565b6100d66040518060400160405280600481526020016344454d4f60e01b81525081565b6100ff6101e4366004610582565b610402565b6101186101f736600461060b565b600360209081526000928352604080842090915290825290205481565b3360008181526003602090815260408083206001600160a01b038716808552925280832085905551919290917f8c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8c7c3b9259061026f9086815260200190565b60405180910390a35060015b92915050565b6001600160a01b0383166000908152600360209081526040808320338452909152812054828110156102e65760405162461bcd60e51b8152602060048201526009602482015268616c6c6f77616e636560b81b60448201526064015b60405180910390fd5b600019811461031e576102f98382610654565b6001600160a01b03861660009081526003602090815260408083203384529091529020555b610329858585610418565b506001949350505050565b6001546001600160a01b0316331461037a5760405162461bcd60e51b81526020600482015260096024820152683737ba1037bbb732b960b91b60448201526064016102dd565b8060008082825461038b9190610667565b90915550506001600160a01b038216600090815260026020526040812080548392906103b8908490610667565b90915550506040518181526001600160a01b038316906000907fddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef9060200160405180910390a35050565b600061040f338484610418565b50600192915050565b6001600160a01b03831660009081526002602052604090205481111561046a5760405162461bcd60e51b815260206004820152600760248201526662616c616e636560c81b60448201526064016102dd565b6001600160a01b03831660009081526002602052604081208054839290610492908490610654565b90915550506001600160a01b038216600090815260026020526040812080548392906104bf908490610667565b92505081905550816001600160a01b0316836001600160a01b03167fddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef8360405161050b91815260200190565b60405180910390a3505050565b602081526000825180602084015260005b818110156105465760208186018101516040868401015201610529565b506000604082850101526040601f19601f83011684010191505092915050565b80356001600160a01b038116811461057d57600080fd5b919050565b6000806040838503121561059557600080fd5b61059e83610566565b946020939093013593505050565b6000806000606084860312156105c157600080fd5b6105ca84610566565b92506105d860208501610566565b929592945050506040919091013590565b6000602082840312156105fb57600080fd5b61060482610566565b9392505050565b6000806040838503121561061e57600080fd5b61062783610566565b915061063560208401610566565b90509250929050565b634e487b7160e01b600052601160045260246000fd5b8181038181111561027b5761027b61063e565b8082018082111561027b5761027b61063e56fea2646970667358221220375fc5416ec54075aaae91be63eed446bbe5b256cd66850b8e0b866b5be8e5e564736f6c634300081a0033",
+        "signature": {
+          "v": 28,
+          "r": "0x13e6c1b7e8268859a08dea45471507ed5995567ce565efb14e3361fd3b77bdea",
+          "s": "0x439e5a4128514b3bddd6faf0b108069200e6649e4ce7381fc8928901183de3be",
+          "eip155Digest": "0x2e4cee4bc1c1611fa4f3a25d3b64c76133ae1cc7a678f3e1638ba0275500af1c",
+          "recoveredFrom": "0xD9cb13A2737416E424fb70842d92503bfbf45985",
+          "recoveryMatchesFrom": true
+        }
+      },
+      "receipt": {
+        "status": 1,
+        "statusMeaning": "成功（EVM 执行未 revert）",
+        "gasUsed": "445419",
+        "effectiveGasPriceWei": "0",
+        "feeWei": "0",
+        "cumulativeGasUsed": "445419",
+        "transactionIndex": 0,
+        "logs": [],
+        "revertReason": null
+      },
+      "block": {
+        "number": 127,
+        "hash": "0x9a532df15fc5d549e95cbc0ed982e5df3c8bd6d980c1772aeee0ba9c73ffc153",
+        "timestamp": 1794372196,
+        "timestampISO": "2026-11-11T04:43:16.000Z",
+        "proposer": "0xBcc5e353c79963E9F9A8B5cC731bA88e614A4aF5",
+        "txCount": 1
+      },
+      "finality": {
+        "model": "QBFT 确定性终结",
+        "confirmations": 5,
+        "note": "入块即最终：≥quorum(3/4) 验证者签过 commit 证书，不存在公链式重组。confirmations 只是链头距离，不是安全参数。"
+      }
+    },
+    {
+      "title": "T4 · ERC20 mint（from=0x0 的 Transfer 事件）",
+      "hash": "0xf9cc1ed46fc547117049d61eba6b1e8dd7bbae3147e5ceaf82724d386ea978af",
+      "lifecycle": {
+        "chainId": 19880601,
+        "type": 0,
+        "typeName": "legacy（EIP-155）",
+        "nonce": 8,
+        "from": "0xD9cb13A2737416E424fb70842d92503bfbf45985",
+        "to": "0xD7eb578095D84a878cCF2794A93dAf20801186ed",
+        "valueWei": "0",
+        "valueB03": "0.0",
+        "gasLimit": "120000",
+        "gasPriceWei": "0",
+        "maxFeePerGas": null,
+        "maxPriorityFeePerGas": null,
+        "input": {
+          "selector": "0x40c10f19",
+          "sig": "mint(address,uint256)",
+          "args": {
+            "to": "0x035aD5435bC643A7de0A62690702817b6d912367",
+            "value": "1000000000000000000000"
+          }
+        },
+        "rawData": "0x40c10f19000000000000000000000000035ad5435bc643a7de0a62690702817b6d91236700000000000000000000000000000000000000000000003635c9adc5dea00000",
+        "signature": {
+          "v": 27,
+          "r": "0x63d9522e5a7b18db311f65244e04f2ff6a9b38c8867421ca3285a560341186d4",
+          "s": "0x4a37e82dc44e8e6bb0d63be50ba943a64c2d60394db8604c009e56998e713768",
+          "eip155Digest": "0xf22c8501a6400549877b1186774fe2a980511609fc7d0ba70b96717358e060bf",
+          "recoveredFrom": "0xD9cb13A2737416E424fb70842d92503bfbf45985",
+          "recoveryMatchesFrom": true
+        }
+      },
+      "receipt": {
+        "status": 1,
+        "statusMeaning": "成功（EVM 执行未 revert）",
+        "gasUsed": "70438",
+        "effectiveGasPriceWei": "0",
+        "feeWei": "0",
+        "cumulativeGasUsed": "70438",
+        "transactionIndex": 0,
+        "logs": [
+          {
+            "address": "0xD7eb578095D84a878cCF2794A93dAf20801186ed",
+            "topics": [
+              "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef",
+              "0x0000000000000000000000000000000000000000000000000000000000000000",
+              "0x000000000000000000000000035ad5435bc643a7de0a62690702817b6d912367"
+            ],
+            "data": "0x00000000000000000000000000000000000000000000003635c9adc5dea00000",
+            "event": "Transfer(address indexed from, address indexed to, uint256 value)",
+            "decoded": {
+              "from": "0x0000000000000000000000000000000000000000",
+              "to": "0x035aD5435bC643A7de0A62690702817b6d912367",
+              "value": "1000000000000000000000"
+            },
+            "note": "from=0x0 → 这是一笔 mint"
+          }
+        ],
+        "revertReason": null
+      },
+      "block": {
+        "number": 128,
+        "hash": "0x711830a27f5d29426ee8c39f6fdfe5dc1797a8eccf2f4d0eaa29d80e7e03c55c",
+        "timestamp": 1794372201,
+        "timestampISO": "2026-11-11T04:43:21.000Z",
+        "proposer": "0x240c383184AAf85fa4F12B6846Ec5c8c5f48EB8B",
+        "txCount": 1
+      },
+      "finality": {
+        "model": "QBFT 确定性终结",
+        "confirmations": 4,
+        "note": "入块即最终：≥quorum(3/4) 验证者签过 commit 证书，不存在公链式重组。confirmations 只是链头距离，不是安全参数。"
+      }
+    },
+    {
+      "title": "T5 · ERC20 转账成功（250 DEMO，带 Transfer 日志）",
+      "hash": "0xc0f343b2239d410466fd988101d25a8f7e068e38089ae59d35b33bb481f4a29c",
+      "lifecycle": {
+        "chainId": 19880601,
+        "type": 0,
+        "typeName": "legacy（EIP-155）",
+        "nonce": 7,
+        "from": "0x035aD5435bC643A7de0A62690702817b6d912367",
+        "to": "0xD7eb578095D84a878cCF2794A93dAf20801186ed",
+        "valueWei": "0",
+        "valueB03": "0.0",
+        "gasLimit": "120000",
+        "gasPriceWei": "0",
+        "maxFeePerGas": null,
+        "maxPriorityFeePerGas": null,
+        "input": {
+          "selector": "0xa9059cbb",
+          "sig": "transfer(address,uint256)",
+          "args": {
+            "to": "0x24d783421B4D15b06CfF1819a69D7f3379d919cE",
+            "value": "250000000000000000000"
+          }
+        },
+        "rawData": "0xa9059cbb00000000000000000000000024d783421b4d15b06cff1819a69d7f3379d919ce00000000000000000000000000000000000000000000000d8d726b7177a80000",
+        "signature": {
+          "v": 28,
+          "r": "0x0371adf817ba8992f9d72c3e48af26a13107aff7dce464509c2d1c676a2ef5be",
+          "s": "0x093fb25d2d8b914e5de172c574abada39a6570ad1e8917219955d72653fb47d1",
+          "eip155Digest": "0x4cdd80d0a63d706e6bf6278ea231c21dd40dcc9f88fb401c078b77d20e5eb0d7",
+          "recoveredFrom": "0x035aD5435bC643A7de0A62690702817b6d912367",
+          "recoveryMatchesFrom": true
+        }
+      },
+      "receipt": {
+        "status": 1,
+        "statusMeaning": "成功（EVM 执行未 revert）",
+        "gasUsed": "51730",
+        "effectiveGasPriceWei": "0",
+        "feeWei": "0",
+        "cumulativeGasUsed": "51730",
+        "transactionIndex": 0,
+        "logs": [
+          {
+            "address": "0xD7eb578095D84a878cCF2794A93dAf20801186ed",
+            "topics": [
+              "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef",
+              "0x000000000000000000000000035ad5435bc643a7de0a62690702817b6d912367",
+              "0x00000000000000000000000024d783421b4d15b06cff1819a69d7f3379d919ce"
+            ],
+            "data": "0x00000000000000000000000000000000000000000000000d8d726b7177a80000",
+            "event": "Transfer(address indexed from, address indexed to, uint256 value)",
+            "decoded": {
+              "from": "0x035aD5435bC643A7de0A62690702817b6d912367",
+              "to": "0x24d783421B4D15b06CfF1819a69D7f3379d919cE",
+              "value": "250000000000000000000"
+            }
+          }
+        ],
+        "revertReason": null
+      },
+      "block": {
+        "number": 129,
+        "hash": "0xe5dacfa5dc5301a0745729b311ebdf4862d8f151b27e95ef21e5dc0fbab0449e",
+        "timestamp": 1794372206,
+        "timestampISO": "2026-11-11T04:43:26.000Z",
+        "proposer": "0x9de4De69C1b85eC62cd3c65A9DdbAbF6F0B18585",
+        "txCount": 1
+      },
+      "finality": {
+        "model": "QBFT 确定性终结",
+        "confirmations": 3,
+        "note": "入块即最终：≥quorum(3/4) 验证者签过 commit 证书，不存在公链式重组。confirmations 只是链头距离，不是安全参数。"
+      }
+    },
+    {
+      "title": "T6 · ERC20 转账失败（余额不足，status=0，gas 照烧）",
+      "hash": "0x195c9840e8856a269589fe4be3be5876bdc89082ce80b1cee16a355edd6826d6",
+      "lifecycle": {
+        "chainId": 19880601,
+        "type": 0,
+        "typeName": "legacy（EIP-155）",
+        "nonce": 8,
+        "from": "0x035aD5435bC643A7de0A62690702817b6d912367",
+        "to": "0xD7eb578095D84a878cCF2794A93dAf20801186ed",
+        "valueWei": "0",
+        "valueB03": "0.0",
+        "gasLimit": "120000",
+        "gasPriceWei": "0",
+        "maxFeePerGas": null,
+        "maxPriorityFeePerGas": null,
+        "input": {
+          "selector": "0xa9059cbb",
+          "sig": "transfer(address,uint256)",
+          "args": {
+            "to": "0x24d783421B4D15b06CfF1819a69D7f3379d919cE",
+            "value": "750000000000000000001"
+          }
+        },
+        "rawData": "0xa9059cbb00000000000000000000000024d783421b4d15b06cff1819a69d7f3379d919ce000000000000000000000000000000000000000000000028a857425466f80001",
+        "signature": {
+          "v": 28,
+          "r": "0xa4aa758a550610efad2a03a3dcfde3215276338d66b4b280a5d88ab7c543d4c0",
+          "s": "0x4741146796bb55e39eea79274272d717cd97243c02b01705acf24d247b879e1f",
+          "eip155Digest": "0xc987901c46836a5937cd39a842ee30560b325d3b41f34e881e0dc18cc7233928",
+          "recoveredFrom": "0x035aD5435bC643A7de0A62690702817b6d912367",
+          "recoveryMatchesFrom": true
+        }
+      },
+      "receipt": {
+        "status": 0,
+        "statusMeaning": "失败（EVM revert，gas 照烧）",
+        "gasUsed": "24419",
+        "effectiveGasPriceWei": "0",
+        "feeWei": "0",
+        "cumulativeGasUsed": "24419",
+        "transactionIndex": 0,
+        "logs": [],
+        "revertReason": "balance"
+      },
+      "block": {
+        "number": 130,
+        "hash": "0x99f10ac10c1a083edc334c8e80124b332406705cd3a8877db3451d99ea8e622b",
+        "timestamp": 1794372211,
+        "timestampISO": "2026-11-11T04:43:31.000Z",
+        "proposer": "0xB4e210662463C6747Fd235106995C4f9C50b1728",
+        "txCount": 1
+      },
+      "finality": {
+        "model": "QBFT 确定性终结",
+        "confirmations": 2,
+        "note": "入块即最终：≥quorum(3/4) 验证者签过 commit 证书，不存在公链式重组。confirmations 只是链头距离，不是安全参数。"
+      }
+    },
+    {
+      "title": "T7 · 零余额账户的 value=0 交易（零 gas 语义正例）",
+      "hash": "0xdf911d26c4650cbf238afc5210331c2fea75a3ee1983afcd1052c81697501393",
+      "lifecycle": {
+        "chainId": 19880601,
+        "type": 0,
+        "typeName": "legacy（EIP-155）",
+        "nonce": 1,
+        "from": "0xC37982a361D96B09A77EFa5A5B52c58013c970af",
+        "to": "0x24d783421B4D15b06CfF1819a69D7f3379d919cE",
+        "valueWei": "0",
+        "valueB03": "0.0",
+        "gasLimit": "21000",
+        "gasPriceWei": "0",
+        "maxFeePerGas": null,
+        "maxPriorityFeePerGas": null,
+        "input": {
+          "selector": null,
+          "note": "空 input：原生转账（或纯 value 交易）"
+        },
+        "rawData": "0x",
+        "signature": {
+          "v": 28,
+          "r": "0x3131c6a0800b70665f9e083e7d182847170f5066202a3ff44953a87d36471d76",
+          "s": "0x51ea3c95ec55ef81692fdaa7a0936064b31cf9ac45200fc01f6347702b2688e3",
+          "eip155Digest": "0x2fdb106ce13e33d9168c1e170f3e7709ddc79bf0c91a7511bada925db80d6cf0",
+          "recoveredFrom": "0xC37982a361D96B09A77EFa5A5B52c58013c970af",
+          "recoveryMatchesFrom": true
+        }
+      },
+      "receipt": {
+        "status": 1,
+        "statusMeaning": "成功（EVM 执行未 revert）",
+        "gasUsed": "21000",
+        "effectiveGasPriceWei": "0",
+        "feeWei": "0",
+        "cumulativeGasUsed": "21000",
+        "transactionIndex": 0,
+        "logs": [],
+        "revertReason": null
+      },
+      "block": {
+        "number": 131,
+        "hash": "0x20e3d44f4942790d9aad1f928a9790b7b457aa8772262d4d7fc2fea4510c3af6",
+        "timestamp": 1794372216,
+        "timestampISO": "2026-11-11T04:43:36.000Z",
+        "proposer": "0xBcc5e353c79963E9F9A8B5cC731bA88e614A4aF5",
+        "txCount": 1
+      },
+      "finality": {
+        "model": "QBFT 确定性终结",
+        "confirmations": 1,
+        "note": "入块即最终：≥quorum(3/4) 验证者签过 commit 证书，不存在公链式重组。confirmations 只是链头距离，不是安全参数。"
+      }
+    }
+  ],
+  "rejections": [
+    {
+      "kind": "faucet-cooldown",
+      "http": 429,
+      "body": {
+        "error": "冷却中，请 56 秒后再领"
+      },
+      "address": "0x035aD5435bC643A7de0A62690702817b6d912367"
+    },
+    {
+      "kind": "insufficient-funds-pool-reject",
+      "code": "INSUFFICIENT_FUNDS",
+      "message": "insufficient funds for intrinsic transaction cost"
+    }
+  ]
+}

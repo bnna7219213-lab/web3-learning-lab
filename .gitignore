@@ -45,6 +45,11 @@ scratch/
 # 本地链运行时的节点身份（含私钥 JWK），永不入库
 projects/*/bin/.network.json
 
+# 联盟链本地运行时：创世密钥对（验证者私钥）与节点数据，永不入库。
+# 可复现性由 genesis/*.tpl + scripts/10-genesis.sh 保证，不靠提交生成物。
+shared/consortium-network/networkFiles/
+shared/consortium-network/run/
+
 # vendored forge-std：只保留编译所需的 src/ 与许可证
 projects/*/lib/forge-std/.github/
 projects/*/lib/forge-std/scripts/
@@ -55,6 +60,10 @@ projects/*/lib/forge-std/Makefile
 projects/*/lib/forge-std/README.md
 projects/*/lib/forge-std/CHANGELOG.md
 projects/*/lib/forge-std/.gitattributes
+
+# vendored openzeppelin：只保留 contracts/ 源码与许可证（mocks 是 OZ 自测件，不入教学库）
+projects/*/lib/openzeppelin-contracts/contracts/mocks/
+projects/*/lib/openzeppelin-contracts/contracts/package.json
 
 # 编辑器本地工作区（Trae 的会话/规划草稿）。设计结论已沉淀进各项目 README，
 # 不把编辑器私有目录纳入版本库。

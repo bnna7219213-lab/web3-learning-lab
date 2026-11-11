@@ -1,0 +1,38 @@
+{
+  "_comment": "besu operator generate-blockchain-config 的输入文件。官方定义（private-networks/reference/subcommands.md）：两个嵌套节点 —— genesis（不含 extraData）与 blockchain（要生成多少对密钥）。",
+  "genesis": {
+    "config": {
+      "chainId": 19880601,
+      "berlinBlock": 0,
+      "londonBlock": 0,
+      "zeroBaseFee": true,
+      "contractSizeLimit": 2147483647,
+      "qbft": {
+        "blockperiodseconds": 5,
+        "requesttimeoutseconds": 10,
+        "epochlength": 30000,
+        "pertxgaslimit": 0
+      }
+    },
+    "nonce": "0x0000000000000000",
+    "timestamp": "0x0",
+    "gasLimit": "0x1fffffffffffff",
+    "difficulty": "0x0",
+    "mixHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+    "coinbase": "0x0000000000000000000000000000000000000000",
+    "alloc": {
+      "d9cb13a2737416e424fb70842d92503bfbf45985": {
+        "balance": "0x200000000000000000000000000000000000000000000000000000000000000"
+      }
+    },
+    "number": "0x0",
+    "gasUsed": "0x0",
+    "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "blockchain": {
+    "nodes": {
+      "generate": true,
+      "count": 4
+    }
+  }
+}
