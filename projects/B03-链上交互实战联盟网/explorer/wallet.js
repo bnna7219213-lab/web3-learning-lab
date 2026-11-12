@@ -339,7 +339,7 @@ $("btnClaim").onclick = async () => {
       ["结果", `领取 ${esc(String(j.amount))} B03 成功`, "ok"],
       ["交易哈希", `<a class="hash" target="_blank" href="/b03/?tx=${esc(j.txHash)}">${esc(j.txHash)}</a>（点击直达浏览器逐字段解析）`, "acc"],
       ["入块", `#${j.block} · QBFT 单块终结`, "ok"],
-      ["付款方（水龙头）", esc(j.from)],
+      ["付款方（水龙头额度合约）", esc(j.from)],
       ...credRows,
       ["说明", esc(j.note)],
     ]);
