@@ -13,6 +13,9 @@ const AMOUNT = ethers.parseEther("10");          // 每次 10 B03
 const COOLDOWN_MS = 60_000;                      // 同一地址 60s 冷却
 const DAILY_BUDGET = ethers.parseEther("500");   // 每日总预算 500 B03（UTC 日切）
 const DATA = process.env.FAUCET_DATA || path.join(__dirname, "data", "claims.json");
+// 衔接 B07 权益凭证：配置后「领币」成功即回调发证服务，一次领取同时得到余额与凭证。
+// 发证失败**不阻断领币**（币已经发出去了，不能因为凭证服务挂了让人拿不到钱）。
+const CREDENTIAL_URL = (process.env.CREDENTIAL_URL || "").replace(/\/+$/, "");
 
 const PK = process.env.FAUCET_PK;
 if (!PK) { console.error("缺 FAUCET_PK"); process.exit(1); }
@@ -91,6 +94,30 @@ const server = http.createServer(async (req, res) => {
       state.spent = (BigInt(state.spent || "0") + AMOUNT).toString();
       persist();                                  // 广播即记账（防止成功后崩溃导致重复发放）
       const rec = await tx.wait();
+
+      // 衔接 B07：领币成功后回调发证服务（登记成员 + 发行凭证）
+      let credential = null;
+      if (CREDENTIAL_URL) {
+        try {
+          const cr = await Promise.race([
+            fetch(CREDENTIAL_URL + "/claim", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ address, purpose: "faucet-claim" }),
+            }).then(async (r) => ({ status: r.status, body: await r.json().catch(() => null) })),
+            // 超时给足：发证服务要先 setMember 再 mintBatch，两个块 ≈ 10s（5s/块）
+            new Promise((_, rej) => setTimeout(() => rej(new Error("凭证服务超时（30s）")), 30000)),
+          ]);
+          credential =
+            cr.body && cr.body.ok
+              ? { ok: true, tokenId: cr.body.tokenId, txHash: cr.body.txHash, metadataUri: cr.body.metadataUri }
+              : { ok: false, error: (cr.body && cr.body.error) || `凭证服务返回 HTTP ${cr.status}` };
+        } catch (e) {
+          credential = { ok: false, error: "凭证发放未完成（不影响已发放的币）：" + (e.message || e) };
+        }
+        console.log("凭证回调：", JSON.stringify(credential));
+      }
+
       json(res, 200, {
         ok: true,
         amount: ethers.formatEther(AMOUNT),
@@ -99,6 +126,7 @@ const server = http.createServer(async (req, res) => {
         from: faucet.address,
         dailySpent: ethers.formatEther(BigInt(state.spent)),
         dailyBudget: ethers.formatEther(DAILY_BUDGET),
+        credential, // 有配置发证服务时返回凭证信息；没有则为 null
         note: "QBFT 单块终结：入块即最终",
       });
     } catch (e) {

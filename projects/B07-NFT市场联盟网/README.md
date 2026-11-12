@@ -62,7 +62,9 @@ B07-NFT市场联盟网/
 │   ├── 04-finality.js           3 节点终结性一致
 │   ├── 05-batch-1000.js         1000 份批量（含 gas 上限 + 链上抽验 Merkle 证明）
 │   ├── 06-redeem-expiry.js      核销时延 + 到期自动回收
-│   └── 07-merkle-proof.js       内网 OSS 上传 + P01 出证库算根 + 链上验证明
+│   ├── 07-merkle-proof.js       内网 OSS 上传 + P01 出证库算根 + 链上验证明
+│   ├── 08-faucet-credential.js  与 B03 水龙头的衔接验收（领水→领证 + 负例）
+│   └── credential-service.js    发证服务（8580）：登记成员 + 发行凭证，供水龙头回调
 ├── frontend/                    权益管理台（静态页 + 同源 RPC 代理，见 scripts/serve-frontend.js）
 ├── env/consortium.env           联盟 profile（无密钥）
 ├── env/.env.local               成员私钥（**本地生成，不入库**，被 .gitignore 的 .env.* 排除）
@@ -92,7 +94,37 @@ node scripts/07-merkle-proof.js
 # 3) 权益管理台
 node scripts/build-frontend.js         # 下发部署地址与 ABI
 node scripts/serve-frontend.js 5180   # → http://127.0.0.1:5180/
+
+# 4) 与 B03 水龙头衔接（可选）
+node scripts/credential-service.js                          # 发证服务 8580（私钥读 env/.env.local）
+# B03 侧带钩子重启水龙头：
+#   cd ../B03-链上交互实战联盟网 && set CREDENTIAL_URL=http://127.0.0.1:8580 && node faucet/start.js
+node scripts/08-faucet-credential.js                        # 衔接验收
 ```
+
+## 与 B03 水龙头的衔接（2026-11-13）
+
+联盟用户的第一动作是「领币」，权益凭证的第一动作是「领证」。两者本该是**一次领取**：
+
+```
+钱包页「领取 10 B03」
+   └─ B03 faucet(8560) 发 10 B03（链上余额 = 资产）
+        └─ 回调 B07 发证服务(8580)
+             ├─ 校验：链上余额 > 0（= 确实领过水）→ 否则 429
+             ├─ setMember(address)        → 登记为链上成员（白名单）
+             ├─ 生成元数据 → 上传内网 OSS   → 算 Merkle 根（P01 出证库）
+             └─ mintBatch(...)             → 发行 1 份凭证（链上只存根）
+   返回体带 credential: {ok, tokenId, txHash, metadataUri} → 钱包页直接展示
+```
+
+**为什么发证要有前置条件**：凭证是**权益**不是空投。若任何地址都能找服务领证，凭证就失去稀缺性，
+白名单也就形同虚设。所以前置条件是「链上有余额」——这是链上可验证的事实，不依赖任何服务的记账。
+
+**衔接失败不阻断领币**：币已经发出去了，不能因为凭证服务挂了让人拿不到钱；
+钱包页会显示「凭证未发放 + 原因」，凭证可稍后单独申领（`POST 8580/issue`）。
+
+**实测**：一次领取 → 10 B03 + 凭证 #2044（含凭证交易哈希与内网元数据链接，`screenshots/04`）；
+负例按预期被拒（没领过水 → 429「请先到水龙头领 10 B03 再领凭证」；60s 内重复领取 → 429 冷却）。
 
 ## 验收（实测记录，2026-11-13）
 
@@ -111,6 +143,7 @@ node scripts/serve-frontend.js 5180   # → http://127.0.0.1:5180/
 | 核销时延 | ✅ 核销接口往返 P50 46ms / **P95 48ms < 300ms**；链上确认 4.1–8.1s（**受 5s 出块周期约束，不是接口问题**） |
 | 到期自动回收 | ✅ 到期判定**不依赖任何人调用**：过期凭证立刻不可转让、不可核销；`sweepExpired` 任何人可调用并留痕（`sweptCount` 上链） |
 | 权益管理台 | ✅ 真实浏览器驱动：连接钱包 → 加载 2042 份凭证 → 成员白名单 → 审计流水 2 条；截图 `screenshots/01~03` |
+| **水龙头衔接** | ✅ 一次领取 = 10 B03 + 权益凭证 #2044（含凭证 tx 与内网元数据链接，`screenshots/04`）；负例：没领过水 → 429、60s 冷却 → 429；元数据重算的 Merkle 根与链上锚定一致 |
 | 仓库零私钥 | `env/.env.local` 被 `.gitignore` 的 `.env.*` 排除（`git check-ignore` 已验证）；`env/consortium.env` 只有地址与 profile |
 
 ## 联盟网特有的坑（本轮实测，与 P07 不重叠）
@@ -130,6 +163,10 @@ node scripts/serve-frontend.js 5180   # → http://127.0.0.1:5180/
    不 `wait()` 就看不到失败（负例会假通过）；同理，取函数返回值要用 `staticCall`。
 8. **PowerShell 坑**：无 BOM 的 `.ps1` 被 PS 5.1 按 GBK 读 → 中文路径乱码 → 脚本里一律用 `$PSScriptRoot` 相对路径；
    `Set-Content -Encoding UTF8` 会给 JSON 加 BOM → `JSON.parse` 报错 → 读 JSON 统一剥 BOM。
+9. **私钥不要上命令行**：PowerShell → cmd 的 `set VAR=... && node` 会带上尾随空格，ethers 直接拒
+   （`invalid BytesLike value`）。做法：服务自己读 `env/.env.local`，或用启动器 `faucet/start.js` 从根 `.env` 读。
+10. **钩子超时要给足**：发证要两笔交易（setMember + mintBatch）= 两个块 ≈ 10s，
+   钩子超时给 8s 会「链上已发证但回调报超时」——看起来像失败，其实凭证已到账。
 
 ## 复盘
 
@@ -143,4 +180,6 @@ node scripts/serve-frontend.js 5180   # → http://127.0.0.1:5180/
   `sweepExpired` 只是把「已失效」显式化并清理占用（教学意义 > 功能意义）。
 - **对客交付时客户最关心的问题**：凭证到期后能不能继续用、成员离职后凭证怎么回收、转让被拒怎么举证——
   这三条分别对应 `isExpired`（无需任何人调用）、白名单撤销即冻结、以及审计流水 + 失败交易双路留痕。
+- **衔接的最有价值的一条设计**：发证前置条件用**链上可验证的事实**（余额 > 0 = 领过水），
+  而不是服务自己的记账文件——这样「能不能领证」不依赖任何一方的账本，跨服务也自洽。
 - 待补：P08 的零 gas 语义讨论（「省 gas」变「省区块容量」）、B07 与 B03 联盟水龙头的衔接（成员领水 + 领凭证）。

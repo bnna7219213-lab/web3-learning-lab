@@ -323,11 +323,24 @@ $("btnClaim").onclick = async () => {
     }
 
     try { localStorage.setItem("b03_last_claim", j.txHash); } catch {}
+    // 衔接 B07 权益凭证：水龙头配置了 CREDENTIAL_URL 时，同一次领取会带回凭证信息
+    const cred = j.credential;
+    const credRows = [];
+    if (cred && cred.ok) {
+      credRows.push(["权益凭证", `<span class="ok">已发放 #${esc(String(cred.tokenId))}</span>`, "ok"]);
+      credRows.push(["凭证交易", `<a class="hash" target="_blank" href="/b03/?tx=${esc(cred.txHash)}">${esc(cred.txHash)}</a>`, "acc"]);
+      if (cred.metadataUri) {
+        credRows.push(["凭证元数据", `<a class="hash" target="_blank" href="${esc(cred.metadataUri)}">${esc(cred.metadataUri)}</a><span class="note">（内网对象存储，链上只存哈希）</span>`, "acc"]);
+      }
+    } else if (cred && !cred.ok) {
+      credRows.push(["权益凭证", `<span class="warn">未发放：${esc(String(cred.error || ""))}</span><span class="note">币已到账，凭证可稍后单独申领</span>`, "warn"]);
+    }
     out.innerHTML = kv([
       ["结果", `领取 ${esc(String(j.amount))} B03 成功`, "ok"],
       ["交易哈希", `<a class="hash" target="_blank" href="/b03/?tx=${esc(j.txHash)}">${esc(j.txHash)}</a>（点击直达浏览器逐字段解析）`, "acc"],
       ["入块", `#${j.block} · QBFT 单块终结`, "ok"],
       ["付款方（水龙头）", esc(j.from)],
+      ...credRows,
       ["说明", esc(j.note)],
     ]);
     await renderBal();
