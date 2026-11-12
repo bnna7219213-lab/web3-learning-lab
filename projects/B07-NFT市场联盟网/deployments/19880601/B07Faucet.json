@@ -1,0 +1,13 @@
+{
+  "admin": "0xD9cb13A2737416E424fb70842d92503bfbf45985",
+  "amountPerClaim": 10000000000000000000,
+  "bytecodeHash": "0xbdfe892a8747679ca9a7b48257ccafc8b1671d5cba8ce8f92f1ec08afd88448c",
+  "chainId": 19880601,
+  "cooldownSeconds": 60,
+  "dailyCap": "500000000000000000000",
+  "evmVersion": "london",
+  "faucet": "0x867d4621F3349d7DAf455784141C4495Fd7da49C",
+  "foundryProfile": "consortium",
+  "networkProfile": "consortium",
+  "project": "B07"
+}

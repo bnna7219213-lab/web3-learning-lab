@@ -5,7 +5,7 @@
 //   3. 合约编译必须 london（部署已按 consortium profile 编译，脚本只管发交易）
 const fs = require("fs");
 const path = require("path");
-const { JsonRpcProvider, Wallet, Contract, Network } = require("ethers");
+const { ethers, JsonRpcProvider, Wallet, Contract, Network } = require("ethers");
 
 const PROJECT = path.resolve(__dirname, "..", "..");
 const REPO = path.resolve(PROJECT, "..", "..");
@@ -122,4 +122,147 @@ function ipfsGateway(cid) {
   return list;
 }
 
-module.exports = { PROJECT, REPO, cfg, rpcUrl, provider, wallet, abi, deployment, credential, txOpts, send, ok, summary, hr, readEnvFile, ipfsAddDir, ipfsGateway };
+// ---------------- 链上额度与链上用量派生（B03 × B07 预算治理） ----------------
+//
+// 原则：**用量事实只从链上取**，服务自己的记账文件只当审计流水。
+// 原因（实测）：Besu 侧历史状态被剪枝（只有 latest 可读），所以「日切时刻的余额 / nextId」
+// 读不到；原生转账又不产生日志，所以水龙头侧干脆把额度本身搬上链（LabFaucet），
+// 凭证侧则用**事件日志**（CredentialIssued.count 累计）按日派生。
+
+/** LabFaucet ABI（额度合约；B03 水龙头用的是同一份 ABI 的副本） */
+function faucetAbi() {
+  return readJson(path.join(PROJECT, "abi", "LabFaucet.json"));
+}
+
+/** 额度合约实例（只读用 provider；要发交易用 signer） */
+function faucetContract(signerOrProvider) {
+  const dep = deployment();
+  if (!dep.faucet) throw new Error("deployments/latest.json 缺 faucet 字段（先跑 scripts/deploy-faucet.ps1）");
+  const p = signerOrProvider && signerOrProvider.provider ? signerOrProvider : provider();
+  return new Contract(dep.faucet, faucetAbi(), p);
+}
+
+/** 当前 UTC 日切时间戳（与服务端 utcDay() 口径一致） */
+function dayStartTs() {
+  return Math.floor(Date.now() / 1000 / 86400) * 86400;
+}
+
+/** 按 block.timestamp 二分定位 UTC 日切区块（第一个 ts >= 日切时刻的块） */
+async function findDayStartBlock(p, ts) {
+  const latest = await p.getBlockNumber();
+  let lo = 0;
+  let hi = latest;
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1;
+    const b = await p.getBlock(mid);
+    if (b.timestamp < ts) lo = mid + 1;
+    else hi = mid;
+  }
+  return lo;
+}
+
+/**
+ * 链上派生：区间内某事件累计的第 1 个非 indexed 数值字段（uint256 count）。
+ * Besu 单次 eth_getLogs 的区间上限实测约 5000 块（10000 会报 could not coalesce error）→ 分块查。
+ */
+async function chainEventCount(p, opts) {
+  const { address, topic, fromBlock, toBlock } = opts;
+  const chunk = opts.chunk || 2000;
+  const topics = opts.topics || [topic];
+  let total = 0n;
+  let logs = 0;
+  let chunks = 0;
+  const errors = [];
+  for (let from = fromBlock; from <= toBlock; from += chunk) {
+    const to = Math.min(from + chunk - 1, toBlock);
+    chunks++;
+    try {
+      const ls = await p.send("eth_getLogs", [
+        { address, topics, fromBlock: ethers.toQuantity(from), toBlock: ethers.toQuantity(to) },
+      ]);
+      logs += ls.length;
+      for (const l of ls) total += BigInt("0x" + l.data.slice(2, 66));
+    } catch (e) {
+      errors.push(`${from}-${to}: ${e.shortMessage || e.message}`);
+    }
+  }
+  return { total, logs, chunks, errors };
+}
+
+const CREDENTIAL_ISSUED_TOPIC = ethers.id("CredentialIssued(uint256,uint256,uint16,bytes32,address)");
+
+/**
+ * 链上派生：当日已发凭证份数（当日区块区间内 CredentialIssued.count 累计）
+ * @param issuerFilter 只统计某个签发者（address）。CredentialIssued 的三个 indexed 参数是
+ *   batchId / startId / issuer → issuer 落在 topics[3]。
+ *   发证服务用独立签发账户，就是为了让「服务对外发放」与「运营方批量发行」分开算：
+ *   否则 05-batch-1000.js 一次发 1000 份会把当日服务配额占满，用户领取路径被锁死。
+ */
+async function chainIssuedToday(p, contractAddress, issuerFilter) {
+  const fromBlock = await findDayStartBlock(p, dayStartTs());
+  const toBlock = await p.getBlockNumber();
+  const topics = issuerFilter
+    ? [CREDENTIAL_ISSUED_TOPIC, null, null, ethers.zeroPadValue(ethers.getAddress(issuerFilter), 32)]
+    : [CREDENTIAL_ISSUED_TOPIC];
+  const r = await chainEventCount(p, { address: contractAddress, topics, fromBlock, toBlock });
+  return { issued: r.total, fromBlock, toBlock, logs: r.logs, chunks: r.chunks, errors: r.errors };
+}
+
+/**
+ * 链上派生用量的完整性自检：全历史 count 合计应等于合约 nextId
+ * （mintBatch 是唯一增发入口；两者相等说明历史日志没被剪枝，按日派生才可信）。
+ */
+async function chainIssuedIntegrity(p, contractAddress, contract) {
+  const toBlock = await p.getBlockNumber();
+  const r = await chainEventCount(p, {
+    address: contractAddress,
+    topic: CREDENTIAL_ISSUED_TOPIC,
+    fromBlock: 0,
+    toBlock,
+  });
+  const nextId = await contract.nextId();
+  return { logCount: r.total, nextId, ok: r.total === nextId, errors: r.errors };
+}
+
+/** 链上事实：水龙头当日额度（dailyInfo） */
+async function chainFaucetBudget(p) {
+  const f = faucetContract(p);
+  const [day, spent, remaining, cap, amountPerClaim, balance] = await f.dailyInfo();
+  return {
+    day: Number(day),
+    spent,
+    remaining,
+    cap,
+    amountPerClaim,
+    contractBalance: balance,
+    source: "chain",
+  };
+}
+
+module.exports = {
+  PROJECT,
+  REPO,
+  cfg,
+  rpcUrl,
+  provider,
+  wallet,
+  abi,
+  deployment,
+  credential,
+  txOpts,
+  send,
+  ok,
+  summary,
+  hr,
+  readEnvFile,
+  ipfsAddDir,
+  ipfsGateway,
+  faucetAbi,
+  faucetContract,
+  dayStartTs,
+  findDayStartBlock,
+  chainEventCount,
+  chainIssuedToday,
+  chainIssuedIntegrity,
+  chainFaucetBudget,
+};

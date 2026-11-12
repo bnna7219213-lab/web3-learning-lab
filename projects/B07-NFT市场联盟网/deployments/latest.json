@@ -7,5 +7,11 @@
   "foundryProfile": "consortium",
   "maxBatchSize": 250,
   "networkProfile": "consortium",
-  "project": "B07"
+  "project": "B07",
+  "faucet": "0x867d4621F3349d7DAf455784141C4495Fd7da49C",
+  "faucetDailyCap": "500000000000000000000",
+  "faucetAmountPerClaim": 10000000000000000000,
+  "faucetCooldownSeconds": 60,
+  "faucetBytecodeHash": "0xbdfe892a8747679ca9a7b48257ccafc8b1671d5cba8ce8f92f1ec08afd88448c",
+  "serviceIssuer": "0xA353D97233B85734f5462BbF76362e635Ad2281B"
 }

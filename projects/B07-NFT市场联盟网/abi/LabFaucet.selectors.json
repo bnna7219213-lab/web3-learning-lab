@@ -1,0 +1,19 @@
+{
+  "admin()": "f851a440",
+  "amountPerClaim()": "013d8847",
+  "claim(address)": "1e83409a",
+  "claimable(address)": "402914f5",
+  "claimsByAddress(address)": "d7a54dca",
+  "cooldownSeconds()": "b8221bc4",
+  "currentDay()": "5c9302c9",
+  "dailyCap()": "eb339391",
+  "dailyInfo()": "43a006ea",
+  "fund()": "b60d4288",
+  "lastClaimAt(address)": "03822d3b",
+  "receivedByAddress(address)": "18f551c7",
+  "setPolicy(uint256,uint256,uint32)": "e0e3b003",
+  "spentByDay(uint256)": "224e86fe",
+  "totalClaims()": "41c61383",
+  "totalPaid()": "e7b0f666",
+  "transferAdmin(address)": "75829def"
+}
