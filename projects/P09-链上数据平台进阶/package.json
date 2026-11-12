@@ -1,0 +1,19 @@
+{
+  "name": "p09-chain-data-platform",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "P09 链上数据平台：自建索引器 + BFF + 看板（Node >= 22.5 内置 node:sqlite，唯一依赖 ethers）",
+  "scripts": {
+    "sync": "node indexer/run.js sync",
+    "watch": "node indexer/run.js watch",
+    "serve": "node indexer/run.js serve",
+    "gen-events": "node scripts/01-gen-events.mjs",
+    "acceptance": "node scripts/02-acceptance.mjs"
+  },
+  "dependencies": {
+    "ethers": "^6.17.0"
+  },
+  "engines": { "node": ">=22.5" }
+}
+

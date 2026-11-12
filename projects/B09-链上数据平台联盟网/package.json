@@ -1,0 +1,19 @@
+{
+  "name": "b09-chain-data-platform-consortium",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "B09 链上数据平台（联盟网版）：自建索引器 + BFF + 看板，事件源 = B07 权益凭证/水龙头 + B08 工程事件（Node >= 22.5 内置 node:sqlite，唯一依赖 ethers）",
+  "scripts": {
+    "sync": "node indexer/run.js sync",
+    "watch": "node indexer/run.js watch",
+    "serve": "node indexer/run.js serve",
+    "gen-events": "node scripts/01-gen-events.mjs",
+    "acceptance": "node scripts/02-acceptance.mjs"
+  },
+  "dependencies": {
+    "ethers": "^6.17.0"
+  },
+  "engines": { "node": ">=22.5" }
+}
+

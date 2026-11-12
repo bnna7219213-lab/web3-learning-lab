@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>P09 · 链上数据看板</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <header>
+    <h1>P09 · 链上数据看板</h1>
+    <div class="sub">自建索引器 + BFF · 事件可查询 / 可对账 / 可出证</div>
+    <div id="health" class="health">连接中…</div>
+  </header>
+
+  <section class="cards" id="cards"></section>
+
+  <section class="panel">
+    <h2>事件分布</h2>
+    <div id="chart"></div>
+  </section>
+
+  <section class="panel">
+    <h2>事件查询（游标分页）</h2>
+    <form id="filters" class="filters">
+      <label>合同号 <input name="address" placeholder="0x…" /></label>
+      <label>事件 <input name="eventName" placeholder="Transfer / Listed / Sold…" /></label>
+      <label>批次 <input name="batch" placeholder="listingId / orderHash / batchId" /></label>
+      <label>Token <input name="tokenId" /></label>
+      <label>地址 <input name="addr" placeholder="from 或 to" /></label>
+      <label>关键词 <input name="q" placeholder="txHash / 地址 / decoded" /></label>
+      <button type="submit">筛选</button>
+      <button type="reset" id="reset">清空</button>
+    </form>
+    <div class="tablewrap">
+      <table id="logs">
+        <thead><tr><th>块</th><th>事件</th><th>合同号</th><th>From</th><th>To</th><th>Token/批次</th><th>Tx</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div class="pager">
+      <button id="prev">上一页</button>
+      <span id="pageinfo"></span>
+      <button id="next">下一页</button>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>持有人（由转账事件重放派生）</h2>
+    <div class="tablewrap">
+      <table id="holders">
+        <thead><tr><th>合同号</th><th>地址</th><th>持仓数</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer>数据来源：本地索引器（SQLite）→ REST BFF → 本页。刷新页面不会丢失筛选（URL 参数）。</footer>
+  <script src="./app.js"></script>
+</body>
+</html>
+
