@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#0d1117"/>
+  <circle cx="256" cy="210" r="110" fill="none" stroke="#58a6ff" stroke-width="10"/>
+  <path d="M146 210 L256 100 L366 210 L256 320 Z" fill="none" stroke="#3fb950" stroke-width="8"/>
+  <circle cx="256" cy="210" r="34" fill="#f0883e"/>
+  <text x="256" y="400" font-family="monospace" font-size="40" fill="#c9d1d9" text-anchor="middle">LAB NFT #0</text>
+  <text x="256" y="450" font-family="monospace" font-size="22" fill="#8b949e" text-anchor="middle">learning credential - zero value</text>
+</svg>

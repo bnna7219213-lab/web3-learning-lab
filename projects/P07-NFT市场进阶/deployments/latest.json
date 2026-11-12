@@ -1,0 +1,16 @@
+{
+  "admin": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+  "chainId": 31337,
+  "editions": "0x0B306BF915C4d645ff596e518fAf3F9669b97016",
+  "evmVersion": "cancun",
+  "foundryProfile": "default",
+  "market": "0x959922bE3CAee4b8Cd9a407cc3ac1C251C2007B1",
+  "marketBytecodeHash": "0xcc1e975f9654813b500a1334c4d72cfcb6109cceb0519fd0d3e95b092abbee6c",
+  "networkProfile": "anvil",
+  "nft": "0x9A676e781A523b5d0C0e43731313A708CB607508",
+  "nftBytecodeHash": "0x122fe3725bc016209163e94002035c61b1362e717fe8f076fbaff94a438068f4",
+  "project": "P07",
+  "royaltyBps": 500,
+  "royaltyReceiver": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+  "tradingEnabled": false
+}

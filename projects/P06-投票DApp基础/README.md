@@ -1,6 +1,6 @@
 # P06 · 投票 DApp（基础 · 全栈最小闭环）
 
-> 状态：**已完成，本机实测通过（anvil + 浏览器 E2E；MetaMask 路径配置就绪待扩展环境实测）** ｜ 里程碑：M1·W5 ｜ 层级：基础 ｜ 主线：全栈 ｜ 依赖：P05 ｜ 更新：2026-11-11
+> 状态：**已完成，本机实测通过（anvil + 浏览器 E2E；MetaMask 真实扩展全流程亦已实测）** ｜ 里程碑：M1·W5 ｜ 层级：基础 ｜ 主线：全栈 ｜ 依赖：P05 ｜ 更新：2026-11-12
 > 一句话目标：完成合约 + React/Wagmi + 钱包 + 事件刷新的全栈最小闭环，作为后续所有 DApp 的骨架。
 
 ## 运行
@@ -21,7 +21,8 @@ npm run dev                        # → http://127.0.0.1:5173
 - **本地演示钱包**：页面按钮一键安装 EIP-1193 shim，anvil 解锁账户代签，零私钥；可切 5 个账户、可模拟错误网络。
 - **MetaMask**：安装扩展 → 添加网络（名称 Anvil，RPC `http://127.0.0.1:8545`，chainId `31337`，符号 ETH）→
   页面「连接 MetaMask」→ 导入 anvil 开发账户（仅本地学习）→ 建提案/投票。
-  **本会话自动化浏览器无扩展，此路径未实测**（见 docs/01 §6）；演示钱包 E2E 覆盖同一接口表面。
+  **该路径已用真实扩展实测通过**（Edge 157 + `--load-extension` + CDP 驱动真实弹窗，
+  见 docs/02-MetaMask真实扩展验收.md）；演示钱包 E2E 覆盖同一接口表面。
 
 ## 目录
 
@@ -36,6 +37,7 @@ P06-投票DApp基础/
 │   └── src/wallet.js         EIP-1193 shim（演示钱包）+ makeConfig；App.jsx 业务与错误诊断
 ├── abi/ · deployments/       deploy.sh 自动导出；前端 import（禁手抄）
 ├── docs/01-全栈闭环与事件驱动刷新.md
+├── docs/02-MetaMask真实扩展验收.md   真实扩展验收：三个根因 + 证据截图 + 可复用脚本
 └── screenshots/01-投票全流程与事件流.png
 ```
 
@@ -66,7 +68,7 @@ P06-投票DApp基础/
 | 错误网络拒绝 | 模拟 chainId 1 → 横幅「只接受 Anvil (31337)，已禁用全部写操作」→ 切换恢复 ✓ |
 | 失败可诊断 | 零时长提案挖块后 revert：tx `0xd1e4bba9…` #13 status=0 → UI「入块但执行失败：投票时长必须大于 0」✓ |
 | 双投/过期防护 | 投过与截止后按钮禁用；合约层 AlreadyVoted/VotingClosed 由 forge 测试钉死 |
-| MetaMask 全流程 | **配置就绪，本会话未实测**（无扩展环境）；步骤见上，留待人工补测 |
+| MetaMask 全流程 | **真实扩展实测通过**（2026-11-12，Edge 157 + CDP 驱动真实弹窗）：连接授权→切 Anvil→建提案 tx `0x811730c7…`(#42)→投票 tx `0x6bc01067…`(#43)→tally 1/0；`cast` 独立核验 `proposalCount=3 / hasVoted=true / owner=0xf39Fd…2266`。详见 docs/02 |
 | 截图 | screenshots/01-投票全流程与事件流.png |
 | 仓库零私钥 | 演示钱包走节点代签；env 无密钥；MetaMask 导入步骤只面向本地学习账户 |
 
@@ -88,4 +90,4 @@ P06-投票DApp基础/
 - 卡住的点：wagmi 缓存语义（invalidate 与观察者生命周期）比合约本身难调——**前端状态层也要有「兜底巡检」思维**，与链下索引器同构。
 - 与 Java/传统后端的对照：watchContractEvent ≈ 消息订阅（WebSocket/MQ）；invalidateQueries ≈ 缓存失效广播；
   轮询兜底 ≈ 定时对账任务；EIP-1193 shim ≈ 接口 mock/stub——同一接口两种实现，业务代码无感。
-- 下次可压缩的时间：钱包 shim 与错误诊断骨架可直接复用到 P07/B06；MetaMask 人工实测应排在有扩展的环境里一次做完。
+- 下次可压缩的时间：钱包 shim 与错误诊断骨架可直接复用到 P07/B06；MetaMask 扩展验收打法已沉淀在 docs/02（Edge + `--load-extension` + 原始 CDP 驱动真实弹窗），P07 可直接照搬。

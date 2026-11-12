@@ -1,0 +1,21 @@
+{
+  "DOMAIN_SEPARATOR()": "3644e515",
+  "ORDER_TYPEHASH()": "f973a209",
+  "buy(uint256)": "d96a094a",
+  "cancel(uint256)": "40e58ee5",
+  "fillOrder((address,address,uint256,uint256,uint256,uint256,uint256),bytes)": "7c4880b8",
+  "hashOrder((address,address,uint256,uint256,uint256,uint256,uint256))": "c2c5dbd6",
+  "list(address,uint256,uint256,uint256)": "bb74a1c2",
+  "listingCount()": "a9b07c26",
+  "listings(uint256)": "de74e57b",
+  "onERC1155BatchReceived(address,address,uint256[],uint256[],bytes)": "bc197c81",
+  "onERC1155Received(address,address,uint256,uint256,bytes)": "f23a6e61",
+  "onERC721Received(address,address,uint256,bytes)": "150b7a02",
+  "orderNonces(address)": "73c859f5",
+  "owner()": "8da5cb5b",
+  "renounceOwnership()": "715018a6",
+  "setTradingEnabled(bool)": "c2e5ec04",
+  "supportsInterface(bytes4)": "01ffc9a7",
+  "tradingEnabled()": "4ada218b",
+  "transferOwnership(address)": "f2fde38b"
+}

@@ -157,7 +157,7 @@ web3_learning_lab/
 - 本链零容错形态（3 验证者 / quorum 3）是**资源约束下的妥协**，不是推荐拓扑；
 - **公网测试网 faucet 已不可用**（2026-11-11 多轮实测：接口被禁/需充值/额度领光），
   P03 经用户授权改由联盟网水龙头接管全流程；Sepolia 流程保留为可选附录，待 faucet 恢复补做；
-- P06 的 **MetaMask 路径配置就绪但未实测**（自动化浏览器无扩展）；E2E 走同一 EIP-1193 接口的
-  anvil 演示钱包，真实 MetaMask 验收留待有扩展的环境人工补一次；
+- P06 的 **MetaMask 路径已用真实扩展实测通过**（2026-11-12：Edge 157 + `--load-extension` + 原始 CDP 驱动真实审批弹窗；
+  连接→切 Anvil→建提案→投票全链路，链上 `cast` 独立核验）；三个真根因与可复用脚本见 P06 docs/02；
 - Besu 26.9.0 在 Windows 上 `--bootnodes` 传 enode 串会崩（路径解析 bug），
   `21-up-native.sh` 已改传 enode 文件绕过——Linux 行为不变。
