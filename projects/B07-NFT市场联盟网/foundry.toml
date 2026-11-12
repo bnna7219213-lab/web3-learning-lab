@@ -1,0 +1,44 @@
+[profile.default]
+src = "src"
+out = "out"
+libs = ["lib"]
+test = "test"
+script = "script"
+solc = "0.8.28"
+optimizer = true
+optimizer_runs = 200
+evm_version = "cancun"
+fs_permissions = [{ access = "read-write", path = "./" }]   # 部署记录要写 deployments/ 与 abi/
+verbosity = 2
+remappings = [
+    "forge-std/=lib/forge-std/src/",
+    "@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/",
+]
+
+[fuzz]
+runs = 500
+max_test_rejects = 65536
+
+[invariant]
+runs = 64
+depth = 32
+fail_on_revert = false
+
+[profile.release]
+optimizer = true
+optimizer_runs = 1_000_000
+via_ir = false
+
+# 联盟网 genesis 只开了 berlinBlock/londonBlock，没有 shanghaiBlock。
+# default 用 cancun → 字节码含 PUSH0(EIP-3855) → 部署交易进块但 status=0、gas 全烧光。
+# B04 实测出来的坑，不是设计时想到的：联盟网一律用 FOUNDRY_PROFILE=consortium 编译。
+[profile.consortium]
+evm_version = "london"
+
+[profile.test]
+optimizer = false       # 关掉优化让 revert 信息与堆栈更好读
+
+[fmt]
+line_length = 118
+tab_width = 4
+bracket_spacing = false

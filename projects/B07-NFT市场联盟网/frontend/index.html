@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>B07 · 联盟内权益凭证管理台</title>
+<style>
+  :root{--bg:#0b0f14;--panel:#121821;--line:#1e2733;--text:#e6edf3;--muted:#8b98a5;--ok:#3fb950;--bad:#f85149;--warn:#d29922;--accent:#58a6ff}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 "Segoe UI","Microsoft YaHei",system-ui,sans-serif}
+  header{display:flex;align-items:center;gap:14px;padding:12px 20px;border-bottom:1px solid var(--line);background:#0d131a}
+  header h1{font-size:16px;margin:0;font-weight:600}
+  .tag{font-size:11px;padding:2px 8px;border:1px solid var(--line);border-radius:20px;color:var(--muted)}
+  main{padding:18px 20px;display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));align-items:start}
+  section{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+  h2{font-size:13px;margin:0 0 10px;color:var(--muted);font-weight:600;letter-spacing:.04em}
+  button{background:#1b2430;color:var(--text);border:1px solid var(--line);border-radius:6px;padding:6px 10px;font-size:12.5px;cursor:pointer}
+  button:hover{border-color:var(--accent);color:var(--accent)}
+  button.primary{background:#12325c;border-color:#1f5fa8}
+  button:disabled{opacity:.45;cursor:not-allowed}
+  input,select{background:#0e141d;color:var(--text);border:1px solid var(--line);border-radius:6px;padding:6px 8px;font-size:12.5px;width:100%;font-family:inherit}
+  label{display:block;font-size:11.5px;color:var(--muted);margin:6px 0 3px}
+  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .kv{display:grid;grid-template-columns:132px 1fr;gap:4px 10px;font-size:12.5px}
+  .kv span:nth-child(odd){color:var(--muted)}
+  .mono{font-family:"Cascadia Mono",Consolas,monospace;font-size:11.5px}
+  table{width:100%;border-collapse:collapse;font-size:12px}
+  th,td{text-align:left;padding:5px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--muted);font-weight:500}
+  .ok{color:var(--ok)}.bad{color:var(--bad)}.warn{color:var(--warn)}.muted{color:var(--muted)}
+  #log{white-space:pre-wrap;font-size:11.5px;max-height:200px;overflow:auto;color:var(--muted)}
+  .pill{display:inline-block;font-size:11px;padding:1px 7px;border-radius:10px;border:1px solid var(--line)}
+  .pill.on{color:var(--ok);border-color:#1c4b2b}
+  .pill.off{color:var(--bad);border-color:#5c2222}
+</style>
+</head>
+<body>
+<header>
+  <h1>B07 · 联盟内权益凭证管理台</h1>
+  <span class="tag" id="tag-chain">chain ?</span>
+  <span class="tag" id="tag-cred">contract ?</span>
+  <span class="tag" id="tag-net">RPC ?</span>
+  <span class="pill off" id="tag-wallet">未连接钱包</span>
+</header>
+<main>
+  <section>
+    <h2>本地签名钱包（联盟网实验用）</h2>
+    <div class="kv">
+      <span>RPC</span><span class="mono" id="k-rpc">-</span>
+      <span>chainId</span><span class="mono" id="k-chain">-</span>
+      <span>凭证合约</span><span class="mono" id="k-cred">-</span>
+      <span>我的地址</span><span class="mono" id="k-me">-</span>
+      <span>当前角色</span><span id="k-role">-</span>
+    </div>
+    <label>导入私钥（本地签名，不出本机；联盟网实验账户）</label>
+    <input id="pk" type="password" placeholder="0x…" />
+    <div class="row" style="margin-top:8px">
+      <button class="primary" id="btn-connect">连接</button>
+      <button id="btn-refresh">刷新</button>
+    </div>
+    <label>操作日志</label>
+    <div id="log"></div>
+  </section>
+
+  <section>
+    <h2>发行方面板</h2>
+    <label>发行给（成员地址）</label>
+    <input id="mint-to" placeholder="成员地址" />
+    <label>元数据基址（内网对象存储，不出内网）</label>
+    <input id="mint-base" />
+    <label>Merkle 根（0x…，对应该批元数据）</label>
+    <input id="mint-root" placeholder="0x…" />
+    <div class="row" style="margin-top:8px">
+      <label style="margin:0">份数（单笔上限 250）</label>
+      <input id="mint-count" type="number" value="1" style="width:90px" />
+      <label style="margin:0">有效期(小时, 0=长期)</label>
+      <input id="mint-hours" type="number" value="0" style="width:90px" />
+      <button class="primary" id="btn-mint">发行</button>
+    </div>
+    <label style="margin-top:10px">成员白名单</label>
+    <div class="row">
+      <input id="member-addr" placeholder="成员地址" style="flex:1" />
+      <button id="btn-member">登记成员</button>
+      <button id="btn-unmember">移除成员</button>
+    </div>
+    <div id="members" style="margin-top:8px"></div>
+  </section>
+
+  <section>
+    <h2>凭证列表</h2>
+    <div class="row" style="margin-bottom:8px">
+      <button id="btn-load">加载凭证</button>
+      <span class="muted" id="cred-count">-</span>
+    </div>
+    <div style="max-height:420px;overflow:auto">
+      <table>
+        <thead><tr><th>#</th><th>持有人</th><th>有效期</th><th>使用权人</th><th>元数据</th><th>操作</th></tr></thead>
+        <tbody id="creds"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>审计流水（被拒的转让尝试）</h2>
+    <div class="row" style="margin-bottom:8px"><button id="btn-audit">加载审计</button><span class="muted" id="audit-count">-</span></div>
+    <div style="max-height:240px;overflow:auto">
+      <table>
+        <thead><tr><th>#</th><th>操作者</th><th>从</th><th>到</th><th>凭证</th><th>原因</th></tr></thead>
+        <tbody id="audits"></tbody>
+      </table>
+    </div>
+  </section>
+</main>
+<script src="./ethers.umd.min.js"></script>
+<script src="./config.js"></script>
+<script src="./app.js"></script>
+</body>
+</html>

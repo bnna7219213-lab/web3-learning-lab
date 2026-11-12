@@ -1,0 +1,11 @@
+{
+  "admin": "0x240c383184AAf85fa4F12B6846Ec5c8c5f48EB8B",
+  "bytecodeHash": "0x236beef48ff586ab1b959dce4f5f62376935316ff1d77556a25f2012441db072",
+  "chainId": 19880601,
+  "credential": "0x111B7DD4980E2B4267020939Df33FdF9afD485A7",
+  "evmVersion": "london",
+  "foundryProfile": "consortium",
+  "maxBatchSize": 250,
+  "networkProfile": "consortium",
+  "project": "B07"
+}

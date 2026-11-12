@@ -1,0 +1,9 @@
+{
+  "name": "b07-consortium-credential",
+  "version": "1.0.0",
+  "private": true,
+  "description": "B07 联盟网权益凭证：部署与验收脚本的依赖入口（ethers v6）",
+  "dependencies": {
+    "ethers": "^6.17.0"
+  }
+}
