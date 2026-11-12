@@ -1,6 +1,6 @@
 # P07 · NFT 市场（进阶 · S3 起点）
 
-> 状态：**已完成，本机实测通过（anvil + 本地 IPFS + 浏览器 E2E）** ｜ 里程碑：M2·W6–7 ｜ 层级：进阶 ｜ 主线：全栈 ｜ 依赖：P06 ｜ 更新：2026-11-11
+> 状态：**已完成，本机实测通过（anvil + 本地 IPFS + 浏览器 E2E；MetaMask 真实扩展全链路亦已实测）** ｜ 里程碑：M2·W6–7 ｜ 层级：进阶 ｜ 主线：全栈 ｜ 依赖：P06 ｜ 更新：2026-11-12
 > 一句话目标：做 ERC721/1155 的铸造—挂单—成交—下架全流程，并吃透 EIP-4907 租期权限分离。
 > 合规：二级市场入口 `tradingEnabled` **默认关闭**；LAB 系 NFT 为零价值学习凭证。
 
@@ -30,6 +30,8 @@ cd frontend && npm install && npm run dev   # → http://127.0.0.1:5174
 浏览器：演示钱包（anvil 解锁账户，零私钥）或 MetaMask（添加 Anvil 31337）。
 admin 面板显式开启二级市场入口后：铸造（自动 pin IPFS）→ 挂单（自动补授权）→ 换账户购买 → 下架 →
 租期设置 → 签名卖单/填单。事件流实时刷新。
+**MetaMask 路径已用真实扩展实测通过**（Edge 157 + `--load-extension` + 原始 CDP 驱动真实审批窗，
+见 docs/02-MetaMask真实扩展验收.md）：铸造→挂单→跨账户购买→4907 租期→EIP-712 签名→fillOrder 成交。
 
 ## 目录
 
@@ -45,7 +47,8 @@ P07-NFT市场进阶/
 ├── frontend/               Vite+React+wagmi：画廊/铸造/挂单/购买/下架/租期/签名订单/事件流
 ├── abi/ · deployments/     自动导出；deployments/31337/P07.json
 ├── docs/01-租期版税撮合与合规开关.md
-└── screenshots/01-市场全流程与事件流.png
+├── docs/02-MetaMask真实扩展验收.md   真实扩展验收：六个新坑 + 证据 + 可复用清单
+└── screenshots/01-市场全流程与事件流.png + 02~09 MetaMask 各阶段证据
 ```
 
 ## 知识点
@@ -71,6 +74,7 @@ P07-NFT市场进阶/
 | 1155 | 铸 10 份→挂 4 份 @2ETH→#1 购买；链上余额 4/6 核对 ✓ |
 | 事件流 | Listed/Sold/Cancelled/OrderFilled/UpdateUser 实时入流（新订阅 4s 内到达） |
 | 完整路径截图 | screenshots/01-市场全流程与事件流.png |
+| **MetaMask 真实扩展** | **全链路实测通过**（2026-11-12，Edge 157 + `--load-extension` + 原始 CDP 驱动真实审批窗）：连接授权→铸造(token#11)→挂单(自动 setApprovalForAll+托管)→切账户重授权→跨账户购买(ACC2 付 0.5 ETH)→4907 租期(`userOf`/`userExpires` 生效)→EIP-712 签名(`eth_signTypedData_v4 -> success`)→fillOrder 成交(tx `0xbd7ded06…`，token#0 归买家)；六个新坑与可复用脚本见 docs/02 |
 | 仓库零私钥 | 演示钱包节点代签；env 无密钥 |
 
 ## 过程中修掉的真实缺陷（详见 docs/01 §7）
@@ -91,3 +95,7 @@ P07-NFT市场进阶/
 - 与 Java/传统后端的对照：escrow≈第三方担保交易账户；签名订单≈带签名的报价单（离线撮合所）；
   4907≈带 TTL 的授权令牌；ERC2981≈行业自律分成协议（不具强制力）。
 - 下次可压缩的时间：钱包 shim/事件流/回执轮询骨架复用 P06，前端只写业务面板；IPFS 脚本一次成型。
+- MetaMask 真实扩展验收（docs/02）新增的经验：**扩展的「选中账户」与「站点被授权账户」是两回事**，
+  切账户必须「切选中 → revoke → 重新授权 → reload DApp 页」四步齐全，否则 viem 会卡在 `getAccount`、
+  交易根本发不出去；账户行的可点元素是**账户名标签**而不是地址。
+- 跨账户场景的断言要钉在**链上**（owner/user/tally），页面 React state 会随 revoke 断连被冲掉。
