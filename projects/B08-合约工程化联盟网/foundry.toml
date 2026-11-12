@@ -1,0 +1,45 @@
+[profile.default]
+src = "src"
+out = "out"
+libs = ["lib"]
+test = "test"
+script = "script"
+solc = "0.8.28"
+optimizer = true
+optimizer_runs = 200
+evm_version = "cancun"
+fs_permissions = [{ access = "read-write", path = "./" }]   # 部署记录要写 deployments/ 与 abi/
+verbosity = 2
+remappings = [
+    "forge-std/=lib/forge-std/src/",
+    "@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/",
+]
+# 与 P05 同构：profile 是「编译/测试设置」，网络分发在 env/*.env + script/deploy.sh。
+# P08 的体积对比用 release（optimizer_runs=1e6）与 default 各出一次报告。
+
+[fuzz]
+runs = 500
+max_test_rejects = 65536
+
+[invariant]
+runs = 64
+depth = 32
+fail_on_revert = false
+
+[profile.release]
+optimizer = true
+optimizer_runs = 1_000_000
+via_ir = true            # P08 体积/Gas 对比的第三列：开 via_ir 看 code size 与执行 gas 的取舍
+
+# 联盟网（B08）编译 profile：london 指令集，避免 PUSH0 进不支持 Shanghai 的链
+# （P05 foundry.toml 已记录此坑：solc 0.8.28 + cancun 会发 PUSH0，B04 上部署 status=0）
+[profile.consortium]
+evm_version = "london"
+
+[profile.test]
+optimizer = false         # 关优化让 revert 信息与堆栈更好读（与 P05 一致）
+
+[fmt]
+line_length = 118
+tab_width = 4
+bracket_spacing = false

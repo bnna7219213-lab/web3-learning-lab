@@ -1,0 +1,40 @@
+{
+  "drilledAt": "2026-11-12T19:35:08.579Z",
+  "manifest": {
+    "change": "VaultV1 -> VaultV2 (UUPS)",
+    "proxy": "0xeB4b754e08E0Dcb9EC4c91C1c5075baDBb6da322",
+    "chainId": 19880601,
+    "rollbackImpl": "0xE87A99b7Ee69b93fCf3581851C0340AF2B9ce127",
+    "window": "升级期间暂停新业务入金（停机窗口），灰度核对通过后恢复"
+  },
+  "memberSignatures": {
+    "memberA": "0x518876f53a260111370a1d105f4b20ad2a08337d6f30e2d576b83ba3790325ce678eefc86a8ac278aa683990fcbba084e84f921af49b5c090b3a6dc9b9ee32e61b",
+    "memberB": "0x5c01329f79591b7607a9eed27683a7d3265095472004ea9d4fe95694ec6689f73fe9893b2c480327dd849a06a64ec16fb9d239f4e3178c4c859130ccf3619bc11b"
+  },
+  "snapshots": [
+    {
+      "tag": "before",
+      "impl": "0xe87a99b7ee69b93fcf3581851c0340af2b9ce127",
+      "slot2TotalDeposited": "0",
+      "owner": "0x240c383184AAf85fa4F12B6846Ec5c8c5f48EB8B",
+      "version": "1"
+    },
+    {
+      "tag": "after-upgrade",
+      "impl": "0xf7823f7b5910e6c097069397f267380205dc621f",
+      "slot2TotalDeposited": "0",
+      "owner": "0x240c383184AAf85fa4F12B6846Ec5c8c5f48EB8B",
+      "version": "1"
+    },
+    {
+      "tag": "after-rollback",
+      "impl": "0xe87a99b7ee69b93fcf3581851c0340af2b9ce127",
+      "slot2TotalDeposited": "0",
+      "owner": "0x240c383184AAf85fa4F12B6846Ec5c8c5f48EB8B",
+      "version": "1"
+    }
+  ],
+  "upgradeTx": "0xb1f1c34c2cc36a5e848442b0c0ceefdc52b6a016915f12566653a4843e182a4a",
+  "rollbackTx": "0x14570c094af16f8e184927035a892d64eb41f8682a8bf03325d87d3dee48aea9",
+  "conclusion": "代码可回滚（实现槽回 V1）；存储不回滚——若执行过 migrateFromV1，version=2 会留在链上，回滚方案必须配套数据订正"
+}

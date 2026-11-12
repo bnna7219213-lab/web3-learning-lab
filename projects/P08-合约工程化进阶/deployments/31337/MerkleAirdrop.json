@@ -1,0 +1,9 @@
+{
+  "address": "0x5b73C5498c1E3b4dbA84de0F1833c4a029d90519",
+  "chainId": 31337,
+  "contract": "MerkleAirdrop",
+  "deployedBytecodeHash": "0x9bccebc8d0b201c720c81f7519c16826aab3ab083a98f337a5a82565c5a6e64c",
+  "evmVersion": "cancun",
+  "foundryProfile": "default",
+  "networkProfile": "unknown"
+}

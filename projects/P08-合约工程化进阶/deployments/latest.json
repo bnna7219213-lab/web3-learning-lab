@@ -1,0 +1,9 @@
+{
+  "address": "0x7FA9385bE102ac3EAc297483Dd6233D62b3e1496",
+  "chainId": 31337,
+  "contract": "GasLab",
+  "deployedBytecodeHash": "0xbe1a50fc9d594ab80595356a0938e2e461d8eaa0cab9a183c5449044fe367896",
+  "evmVersion": "cancun",
+  "foundryProfile": "default",
+  "networkProfile": "unknown"
+}

@@ -1,0 +1,7 @@
+{
+  "claim(string,bytes32[],uint256)": "2f0879f7",
+  "claimedLeaf(bytes32)": "80bdc421",
+  "leafHash(string)": "66b28641",
+  "root()": "ebf0c717",
+  "verify(string,bytes32[],uint256)": "aed84ef0"
+}

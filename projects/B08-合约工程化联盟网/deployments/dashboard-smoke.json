@@ -1,0 +1,76 @@
+{
+  "measuredAt": "2026-11-12T20:19:16.418Z",
+  "port": 8808,
+  "chain": {
+    "chainId": 19880601,
+    "head": 28638,
+    "gasPrice": "0",
+    "baseFeePerGas": "0",
+    "zeroGas": true,
+    "blockGasLimit": "9007199254740991",
+    "finality": {
+      "targetBlock": 28637,
+      "nodes": [
+        {
+          "node": "http://127.0.0.1:8551",
+          "hash": "0x95bd76e24a37e8cd7ae66cfcc8fc1279cfdc2d338892bf153572851ef60a2932"
+        },
+        {
+          "node": "http://127.0.0.1:8552",
+          "hash": "0x95bd76e24a37e8cd7ae66cfcc8fc1279cfdc2d338892bf153572851ef60a2932"
+        },
+        {
+          "node": "http://127.0.0.1:8553",
+          "hash": "0x95bd76e24a37e8cd7ae66cfcc8fc1279cfdc2d338892bf153572851ef60a2932"
+        }
+      ],
+      "consistent": true,
+      "hash": "0x95bd76e24a37e8cd7ae66cfcc8fc1279cfdc2d338892bf153572851ef60a2932"
+    }
+  },
+  "vault": {
+    "proxy": "0xeB4b754e08E0Dcb9EC4c91C1c5075baDBb6da322",
+    "registeredImpl": "0xE87A99b7Ee69b93fCf3581851C0340AF2B9ce127",
+    "implOnChain": "0xE87A99b7Ee69b93fCf3581851C0340AF2B9ce127",
+    "implMatchesRegister": true,
+    "owner": "0x240c383184AAf85fa4F12B6846Ec5c8c5f48EB8B",
+    "version": "1",
+    "totalDeposited": "0",
+    "totalWithdrawn": null,
+    "lastDepositBlockNote": "当前实现为 V1：V2 独有字段（totalWithdrawn / lastDepositBlock）在代理上会 revert —— 升级后才有",
+    "upgradeInterfaceVersion": "5.0.0"
+  },
+  "events": {
+    "count": 10,
+    "names": [
+      "Deployed",
+      "Claimed",
+      "Upgraded",
+      "Initialized",
+      "OwnershipTransferred"
+    ]
+  },
+  "create2": {
+    "factory": "0x707C0065297d53C03fb373a31287942A926DfD7c",
+    "deployCount": "1",
+    "registeredChainId": 19880601,
+    "lastDeployed": {
+      "blockNumber": 28217,
+      "txHash": "0x092468cc49c1b44f7ffce4e89872e812a9806387cfd1074f737bbea631d4319c"
+    },
+    "crossCheck": {
+      "salt": "0xf511385c67c14ae6b8f20fc2cd4337dadb9fd3ea3ab44f6d4c1096c04d15cd6d",
+      "addrFromEvent": "0x22C8146BD4aEe2644e440A9659a1c2616e32Ea3A",
+      "addrRegistered": "0x22C8146BD4aEe2644e440A9659a1c2616e32Ea3A",
+      "onchainCalc": "0x93e162e29cfF95A4b33e8529DfABE45EA6B3497a",
+      "registeredMatchesEvent": true
+    }
+  },
+  "merkle": {
+    "contract": "0xc0178d607aDe330722fb3f30660113417fd1767B",
+    "rootOnChain": "0x9a70e0ab32d1a4e552a7dfbfd3eb016f769103d8226dd134125347ac6f9836d6",
+    "rootInDeployment": "0x9a70e0ab32d1a4e552a7dfbfd3eb016f769103d8226dd134125347ac6f9836d6",
+    "matches": true,
+    "note": "脚本 08 用 P01 的链下 merkle.js 做四方向互验，本页只核对链上/部署记录是否一致"
+  }
+}

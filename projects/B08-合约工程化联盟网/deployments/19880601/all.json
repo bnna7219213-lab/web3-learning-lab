@@ -1,0 +1,13 @@
+{
+  "Create2Factory": "0x707C0065297d53C03fb373a31287942A926DfD7c",
+  "GasLab": "0x63d05dCE0B7B887601C3148aF985e69Ce48487cF",
+  "MerkleAirdrop": "0xc0178d607aDe330722fb3f30660113417fd1767B",
+  "chainId": 19880601,
+  "deployer": "0x240c383184AAf85fa4F12B6846Ec5c8c5f48EB8B",
+  "evmVersion": "london",
+  "foundryProfile": "consortium",
+  "merkleRoot": "0x9a70e0ab32d1a4e552a7dfbfd3eb016f769103d8226dd134125347ac6f9836d6",
+  "networkProfile": "consortium",
+  "vaultImpl": "0xE87A99b7Ee69b93fCf3581851C0340AF2B9ce127",
+  "vaultProxy": "0xeB4b754e08E0Dcb9EC4c91C1c5075baDBb6da322"
+}

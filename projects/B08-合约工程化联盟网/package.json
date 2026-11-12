@@ -1,0 +1,23 @@
+{
+  "name": "b08-consortium-engineering",
+  "version": "1.0.0",
+  "private": true,
+  "description": "B08 联盟网合约工程化：部署 / 验收脚本 / 运维看板的依赖入口（ethers v6）",
+  "scripts": {
+    "acceptance": "node scripts/run-all.js",
+    "multi-member": "node scripts/02-multi-member.js",
+    "zero-gas": "node scripts/03-zero-gas.js",
+    "finality": "node scripts/04-finality.js",
+    "permission": "node scripts/05-permission-negative.js",
+    "gas-report": "node scripts/06-gas-report.js",
+    "upgrade-drill": "node scripts/07-upgrade-drill.js",
+    "merkle": "node scripts/08-merkle-crosscheck.js",
+    "big-contract": "node scripts/09-big-contract.js",
+    "create2": "node scripts/10-create2-chainid.js",
+    "dashboard": "node scripts/11-dashboard-smoke.js",
+    "serve": "node frontend/server.js"
+  },
+  "dependencies": {
+    "ethers": "^6.17.0"
+  }
+}

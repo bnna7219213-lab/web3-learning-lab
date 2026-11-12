@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>B08 · 合约工程化运维看板</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <a class="skip" href="#main">跳到主内容</a>
+
+  <header>
+    <div class="brand">
+      <h1>B08 · 合约工程化运维看板</h1>
+      <p class="sub">Gas 双指标 · 升级演练 · Create2 登记 · Merkle 互验 —— 链上事实与实测记录并排对照</p>
+    </div>
+    <div id="health" class="health" role="status" aria-live="polite">连接中…</div>
+  </header>
+
+  <main id="main">
+    <!-- ① 链状态 -->
+    <section class="panel" aria-labelledby="h-chain">
+      <h2 id="h-chain">① 链状态</h2>
+      <div class="cards" id="cards"></div>
+      <p class="hint" id="finality"></p>
+      <h3>Vault 代理（UUPS）链上状态</h3>
+      <div class="tablewrap">
+        <table id="vault-table">
+          <caption class="sr-only">Vault 代理的实现槽、业务槽与版本状态</caption>
+          <thead>
+            <tr><th scope="col">项</th><th scope="col">值</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ② 区块容量双指标 -->
+    <section class="panel" aria-labelledby="h-gas">
+      <h2 id="h-gas">② 区块容量双指标（gas-report）</h2>
+      <p class="hint">零 gas ≠ 不需要优化：<code>gasUsed</code> 在联盟链上表示<strong>区块容量占用</strong>与<strong>出块延迟</strong>，不是费用。</p>
+      <div class="tablewrap">
+        <table id="gas-table">
+          <caption class="sr-only">四组 Gas 对照的区块容量占用与节省量</caption>
+          <thead>
+            <tr>
+              <th scope="col">对照组</th>
+              <th scope="col">朴素写法 gasUsed</th>
+              <th scope="col">优化写法 gasUsed</th>
+              <th scope="col">节省</th>
+              <th scope="col">占块比例（优化后）</th>
+              <th scope="col">30M 参考块可装</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <h3>出块延迟影响（每批 10 笔连发）</h3>
+      <div class="tablewrap">
+        <table id="batch-table">
+          <caption class="sr-only">轻重两批业务连发的墙钟延迟与跨块数</caption>
+          <thead>
+            <tr>
+              <th scope="col">批次</th>
+              <th scope="col">10 笔全确认</th>
+              <th scope="col">跨块数</th>
+              <th scope="col">合计 gasUsed</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ③ 升级演练 -->
+    <section class="panel" aria-labelledby="h-upgrade">
+      <h2 id="h-upgrade">③ 多成员升级演练（upgrade-drill）</h2>
+      <div id="upgrade"></div>
+    </section>
+
+    <!-- ④ 大合约边界 -->
+    <section class="panel" aria-labelledby="h-big">
+      <h2 id="h-big">④ 合约体积与单笔 gas 上限（big-contract）</h2>
+      <div class="tablewrap">
+        <table id="big-table">
+          <caption class="sr-only">两档合约体积的部署结果与 gasUsed</caption>
+          <thead>
+            <tr>
+              <th scope="col">档位</th>
+              <th scope="col">字节数</th>
+              <th scope="col">gasUsed</th>
+              <th scope="col">链上代码长度</th>
+              <th scope="col">地址</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <p class="hint" id="big-note"></p>
+    </section>
+
+    <!-- ⑤ Create2 与 Merkle 登记 -->
+    <section class="panel" aria-labelledby="h-addr">
+      <h2 id="h-addr">⑤ 地址登记与双算对账</h2>
+      <div class="two">
+        <div>
+          <h3>Create2 地址（EIP-1014）</h3>
+          <div class="tablewrap">
+            <table id="c2-table">
+              <caption class="sr-only">Create2 工厂登记信息与链下双算对账</caption>
+              <thead>
+                <tr><th scope="col">项</th><th scope="col">值</th></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+        <div>
+          <h3>Merkle 根对账</h3>
+          <div class="tablewrap">
+            <table id="mk-table">
+              <caption class="sr-only">链上 Merkle 根与部署记录的对账</caption>
+              <thead>
+                <tr><th scope="col">项</th><th scope="col">值</th></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ⑥ 链上工程事件 -->
+    <section class="panel" aria-labelledby="h-events">
+      <h2 id="h-events">⑥ 链上工程事件（Vault 代理 / 空投 / Create2 工厂）</h2>
+      <p class="hint">
+        事件来源与 B09 索引器同源：ERC-1967 的 <code>Upgraded</code> 是代理升级的链上证据，
+        <code>Claimed</code> 是空投领取留痕，<code>Deployed</code> 是 Create2 落址登记。
+      </p>
+      <div class="tablewrap">
+        <table id="ev-table">
+          <caption class="sr-only">B08 合约的链上事件列表</caption>
+          <thead>
+            <tr>
+              <th scope="col">块</th>
+              <th scope="col">事件</th>
+              <th scope="col">合约</th>
+              <th scope="col">参数</th>
+              <th scope="col">Tx</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    只读看板：不持有私钥、不发交易（写操作在 <code>scripts/</code> 里）。数据源：BFF 只读 RPC +
+    <code>deployments/*.json</code> 实测记录。同源 <code>/rpc</code> 反代绕开 Besu 的空 CORS 白名单。
+  </footer>
+
+  <script src="./app.js"></script>
+</body>
+</html>

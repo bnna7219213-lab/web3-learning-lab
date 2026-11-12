@@ -14,11 +14,12 @@
 | 链上交互 | `projects/P03` | 交易生命周期手册：建钱包→领水→转账→逐字段解析，8+2 笔联盟网实测交易（含失败案例），零公链依赖 |
 | ERC20 合约 | `projects/P05` | LabToken：Permit/角色/上限/舍入视图，36 项测试（fuzz+invariant）覆盖率 100%，anvil+联盟网双部署 |
 | 全栈 DApp | `projects/P06` | 投票闭环：React+Wagmi+双钱包路径（MetaMask / anvil 演示钱包），事件驱动实时刷新，浏览器 E2E 实测 |
-| 合约工程 | `projects/P04`–`P08`、`P20`–`P25` | Foundry 编写 / 测试 / 部署 / 升级 / 审计（P04/P05/P06 已完成实测） |
+| 合约工程 | `projects/P04`–`P08`、`P20`–`P25` | Foundry 编写 / 测试 / 部署 / 升级 / 审计（P04/P05/P06/P07/P08 已完成实测；B08 联盟网版含多成员升级演练与大合约边界实测） |
 | **真实联盟网** | `shared/consortium-network` | Besu + QBFT 四验证者本地组网、创世生成、加成员、冒烟测试 |
 | **自建钱包 + 联盟链浏览器** | `projects/B03` | 没有 MetaMask、没有 Etherscan、没有公链 faucet 的情况下，把「建账户 → 领币 → 发交易 → 逐字段自查」走通 |
 | 联盟链上的真实故障 | `projects/B04` | 卡池交易、EIP-1559 费用下限、PUSH0 与 evmVersion、同 nonce 替换解锁 |
 | **联盟内权益凭证** | `projects/B07` | NFT 市场的联盟版：成员白名单转让（禁二级）、元数据只存哈希（内网 OSS + P01 出证结构）、4907 租期、到期自动回收、核销与审计留痕；**与 B03 水龙头衔接——一次领取同时得到余额与凭证**；零 gas + 4 验证者 QBFT 实测 |
+| **合约工程化（联盟版）** | `projects/B08` | Gas 双指标（区块容量+出块延迟）、多成员升级演练（签名窗口+回滚）、Merkle×P01 四方向互验、>24KB 大合约边界实测；40 条 forge 单测 + 8 个验收脚本全绿 |
 | 可独立复核的出证 | `shared/evidence` | v2 索引化 Merkle 树 + P-256 签名验证，12 项属性测试 + 9 项篡改拒绝 |
 
 ## 2. 快速开始（零依赖部分，Windows / Git Bash）

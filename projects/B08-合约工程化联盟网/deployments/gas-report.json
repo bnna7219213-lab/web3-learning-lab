@@ -1,0 +1,57 @@
+{
+  "measuredAt": "2026-11-12T19:30:19.256Z",
+  "chainId": 19880601,
+  "blockGasLimit": "9007199254740991",
+  "perTxScriptCap": "8000000",
+  "blockIntervalSeconds": 5,
+  "gasLabN": 64,
+  "note": "gasUsed=执行开销/容量占用，非费用；实配 gasLimit 近乎无界（0x1fffffffffffff），容量结论以 30M 参考块推演",
+  "groups": [
+    {
+      "group": "组1 循环读 storage（64 元素）",
+      "fnNaive": "sumNaive",
+      "fnOpt": "sumCached",
+      "gasNaive": "184056",
+      "gasOpt": "177583",
+      "saved": "6473"
+    },
+    {
+      "group": "组2 外部数组处理（128 元素）",
+      "fnNaive": "countNaive",
+      "fnOpt": "countCalldata",
+      "gasNaive": "68315",
+      "gasOpt": "66887",
+      "saved": "1428"
+    },
+    {
+      "group": "组3 循环累加（500 轮）",
+      "fnNaive": "accumulateChecked",
+      "fnOpt": "accumulateUnchecked",
+      "gasNaive": "88100",
+      "gasOpt": "51261",
+      "saved": "36839"
+    },
+    {
+      "group": "组4 单槽读-改-写",
+      "fnNaive": "creditNaive",
+      "fnOpt": "creditCached",
+      "gasNaive": "26534",
+      "gasOpt": "26598",
+      "saved": "0"
+    }
+  ],
+  "batches": [
+    {
+      "label": "重业务 accumulateChecked(500)",
+      "wallMs": 8446,
+      "blocksSpanned": 1,
+      "gasTotal": "855800"
+    },
+    {
+      "label": "轻业务 creditCached(1)",
+      "wallMs": 4419,
+      "blocksSpanned": 1,
+      "gasTotal": "265980"
+    }
+  ]
+}

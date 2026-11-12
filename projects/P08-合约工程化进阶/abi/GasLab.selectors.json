@@ -1,0 +1,12 @@
+{
+  "accumulateChecked(uint256)": "faa1a643",
+  "accumulateUnchecked(uint256)": "27ecdf64",
+  "countCalldata(uint256[])": "996a8368",
+  "countNaive(uint256[])": "f8cf3372",
+  "creditCached(uint256)": "fb73c5d7",
+  "creditNaive(uint256)": "2aff8256",
+  "data(uint256)": "f0ba8440",
+  "sumCached()": "ea71afa6",
+  "sumNaive()": "d72c3d87",
+  "total()": "2ddbd13a"
+}
