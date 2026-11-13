@@ -48,6 +48,9 @@ scratch/
 
 # B04 本地实验账户密钥：默认文件名与自定义 *key*.json 都不入库
 projects/B04-HelloContract联盟网/docs/evidence/*key*.json
+# 处置台/浏览器运行期证据：提交前由实测脚本汇总到 evidence/README.md
+projects/B04-HelloContract联盟网/docs/evidence/console-*.jsonl
+projects/B04-HelloContract联盟网/docs/evidence/console-*.png
 
 # 本地链运行时的节点身份（含私钥 JWK），永不入库
 projects/*/bin/.network.json
