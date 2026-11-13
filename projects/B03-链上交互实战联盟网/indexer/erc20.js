@@ -20,7 +20,10 @@ function extractTransfers(receipt) {
   const out = [];
   const logs = receipt.logs || [];
   for (const l of logs) {
-    if (!l.topics || l.topics.length < 3 || String(l.topics[0]).toLowerCase() !== TRANSFER_TOPIC) continue;
+    // ERC20 是 3 topics + 32B data；ERC721 同名事件为 4 topics + 空 data。
+    // 后者不能进代币转账表，否则 BigInt("0x") 会让整个扫描批次永久停在同一高度。
+    if (!l.topics || l.topics.length !== 3 || String(l.topics[0]).toLowerCase() !== TRANSFER_TOPIC) continue;
+    if (!/^0x[0-9a-fA-F]{64}$/.test(l.data || "")) continue;
     out.push({
       txHash: receipt.transactionHash || l.transactionHash,
       blockNumber: Number(BigInt(receipt.blockNumber || "0x0")),

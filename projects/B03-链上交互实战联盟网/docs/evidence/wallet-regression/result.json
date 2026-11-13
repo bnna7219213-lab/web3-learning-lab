@@ -1,0 +1,71 @@
+{
+  "date": "2026-11-13",
+  "network": { "chainId": 19880601, "consensus": "QBFT", "validators": 4 },
+  "wallet": {
+    "address": "0xfc982199E8a8EE4244d851087e714ce2C7b44F72",
+    "recipient": "0x93D50495B2DfBD81B0aDCae6bC88D5BCa68D25e5",
+    "secretRendered": false
+  },
+  "steps": [
+    { "id": 1, "name": "生成并保存钱包，刷新恢复", "result": "PASS", "evidence": "01-created.png" },
+    { "id": 2, "name": "水龙头领取与链上余额", "result": "PASS", "claims": [
+      { "amount": "10.0 B03", "txHash": "0x34efb89ea06c4598c1c0d8a7b36193be39cee9e94511649098b4a716119b05e8", "block": 31164 },
+      { "amount": "10.0 B03", "txHash": "0x4745f44b7e94e3f00a219c0280e34d40b1694c9d0b50b557f371fa3f91a2565e", "block": 31262 }
+    ], "evidence": "02-claimed-balance.png" },
+    { "id": 3, "name": "余额、nonce、零 gas 与 EIP-55 拒绝", "result": "PASS", "rejection": "全小写地址被拦在签名前，并返回规范 EIP-55 地址", "evidence": "03-checksum-rejection.png" },
+    { "id": 4, "name": "签名发送跨地址 1 B03", "result": "PASS", "txHash": "0x1a29b95b3b60c30b9f2c33412e30b33b88d98c1a7b7b204d41a888a57b39dfbc", "block": 31352, "gasUsed": 21000, "evidence": "04-transfer-reconciled.png" },
+    { "id": 5, "name": "双向对账与观察地址", "result": "PASS", "sender": "20.0 -> 19.0 B03", "recipient": "0.0 -> 1.0 B03", "recipientPrivateKeyRequired": false, "evidence": "04-transfer-reconciled.png" },
+    { "id": 6, "name": "浏览器交易与地址深链逐字段自查", "result": "PASS", "evidence": ["05-explorer-transaction.png", "06-recipient-address.png", "07-sender-address.png"] }
+  ],
+  "indexerRegression": {
+    "tests": "2/2 PASS",
+    "command": "node --test projects/B03-链上交互实战联盟网/indexer/scanner.test.js",
+    "caughtUp": { "indexed": 32041, "chainHead": 32041, "lag": 0, "txs": 922 },
+    "addressHistory": { "direction": "in", "block": 31352, "valueWei": "1000000000000000000", "status": 1 }
+  },
+  "independentTransfer": {
+    "command": "node projects/B03-链上交互实战联盟网/scripts/verify-transfer-both-sides.js",
+    "result": "PASS", "sender": "10.0 -> 9.0 B03", "recipient": "0.0 -> 1.0 B03",
+    "txHash": "0xdcb9db098fe64833becb0eaeccc4290b2780a82512de5886974480c68bb5e62d", "block": 32040
+  },
+  "nodeBalanceChecks": {
+    "sender": { "wei": "19000000000000000000", "nonce": 1, "nodes": [8551, 8552, 8553, 8554], "consistent": true },
+    "recipient": { "wei": "1000000000000000000", "nonce": 0, "nodes": [8551, 8552, 8553, 8554], "consistent": true }
+  },
+  "additionalRuns": [
+    {
+      "purpose": "高清证据复跑",
+      "address": "0x46E5322321AB5c8Ca8AEA85505c98D9efF720f62",
+      "claims": [
+        { "amount": "10.0 B03", "txHash": "0x31887cfa19899cfe00ac7a9393ad5dd17de2e723fcf974827d923223f207530c", "block": 32394 },
+        { "amount": "10.0 B03", "txHash": "0xd180b106d3c03e6531f037b532ed95fc054d46e95ed84a27a9682a8384f1cd17", "block": 32414 }
+      ],
+      "balanceWei": "20000000000000000000",
+      "nodes": [8551, 8552, 8553, 8554]
+    },
+    {
+      "purpose": "第二次跨地址对账与 EIP-55 复跑",
+      "sender": "0xfc982199E8a8EE4244d851087e714ce2C7b44F72",
+      "recipient": "0xBa80f738605050c54BCC4D9eb81982f0A3EA401A",
+      "senderDelta": "19.0 -> 18.0 B03",
+      "recipientDelta": "0.0 -> 1.0 B03",
+      "txHash": "0xf02c29b266853541acb1cb3dfa81f33484112efa87e79c8bc34d1272a35a0f54",
+      "block": 32454,
+      "status": 1,
+      "gasUsed": 21000
+    },
+    {
+      "purpose": "高清桌面证据第三组",
+      "address": "0x266687c1ACB23b47276b5665641Eebb660964295",
+      "firstClaim": { "txHash": "0x5371c641315c10c261f8635477dcbcdffcf582d2c0124ffb4b0b0fd444b9236f", "block": 32507 },
+      "balanceWei": "20000000000000000000",
+      "nodes": [8551, 8552, 8553, 8554],
+      "note": "领币成功；桌面浏览器中断后，EIP-55 负例与对账细节用 Playwright 高清局部图补齐。"
+    }
+  ],
+  "browserConsoleErrors": 0,
+  "notes": [
+    "仅教学一次性账户；未在页面或证据中展示私钥/助记词。",
+    "索引器原先因 ERC721 空 data 触发 BigInt(0x) 停在 25777；修复并追平后才拍摄地址历史验收图。"
+  ]
+}

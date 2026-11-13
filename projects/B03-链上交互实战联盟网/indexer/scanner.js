@@ -20,7 +20,7 @@ const num = (h) => (h == null ? 0 : Number(BigInt(h)));
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 async function scanBatch(d, provider, from) {
-  const head = num(await rpcCall("eth_blockNumber"));
+  const head = num(await module.exports._rpcCall("eth_blockNumber"));
   const to = Math.min(from + cfg.BATCH - 1, head);
   if (to < from) return { done: 0, head };
 
@@ -31,8 +31,8 @@ async function scanBatch(d, provider, from) {
   const receipts = [];
   for (const tag of blockNums) {
     const [b, rc] = await Promise.all([
-      rpcCall("eth_getBlockByNumber", [tag, true]),
-      rpcCall("eth_getBlockReceipts", [tag]),
+      module.exports._rpcCall("eth_getBlockByNumber", [tag, true]),
+      module.exports._rpcCall("eth_getBlockReceipts", [tag]),
     ]);
     if (!b) {
       // 链头附近的块偶发返回 null（节点尚未持久化完）→ 截断本批，下次从该高度续扫
@@ -65,7 +65,7 @@ async function scanBatch(d, provider, from) {
           txIndex: ti,
           from: String(t.from).toLowerCase(),
           to: t.to ? String(t.to).toLowerCase() : null,
-          value: BigInt(t.value || "0x0").toString(10),
+          value: BigInt(!t.value || t.value === "0x" ? "0x0" : t.value).toString(10),
           input: t.input || "0x",
           nonce: num(t.nonce),
           status: rec.status === "0x1" ? 1 : 0,
@@ -156,4 +156,4 @@ async function run() {
   }
 }
 
-module.exports = { run, rpcCall };
+module.exports = { run, rpcCall, scanBatch, _rpcCall: rpcCall };
