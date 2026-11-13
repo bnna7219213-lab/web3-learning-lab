@@ -1,0 +1,16 @@
+{
+  "name": "b06-approval-dapp-consortium",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "B06 双人复核审批 DApp（联盟网）：多成员账户 + 生效延迟 + 撤销窗口 + 多成员前端（后端代签）",
+  "scripts": {
+    "test": "forge test",
+    "deploy": "node scripts/01-deploy.mjs",
+    "acceptance": "node scripts/02-acceptance.mjs",
+    "serve": "node scripts/serve.mjs"
+  },
+  "dependencies": {
+    "ethers": "^6.17.0"
+  }
+}

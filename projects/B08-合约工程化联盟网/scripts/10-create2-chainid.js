@@ -25,7 +25,14 @@ const { wallet, contract, provider, txOpts, ok, summary, hr, ethers, deployment,
   const beaconBytecode = beaconArt.bytecode.object || beaconArt.bytecode;
   const initCode = beaconBytecode + ethers.AbiCoder.defaultAbiCoder().encode(["uint256"], [7]).slice(2);
   const initCodeHash = ethers.keccak256(initCode);
-  const salt = ethers.keccak256(ethers.toUtf8Bytes("b08/beacon/consortium/v1"));
+  // ── salt 必须是「一次性」的 ──────────────────────────────────────────────
+  // CREATE2 的地址由 (factory, salt, initCodeHash) 唯一决定，同 salt 二次部署必然撞地址
+  //   被 AddressAlreadyUsed 拒绝 —— 这是幂等性，不是 bug。
+  //   所以实部署用「run-scoped salt」（带运行时刻）→ 本脚本可以反复跑；
+  //   ④ 再显式验证「同 salt 重复部署被拒」这条链上规则。
+  const runTag = process.env.B08_RUN_TAG || new Date().toISOString().replace(/[:.]/g, "-");
+  const salt = ethers.keccak256(ethers.toUtf8Bytes("b08/beacon/consortium/v1/" + runTag));
+  console.log(`  run-scoped salt = ${salt}（runTag=${runTag}）`);
 
   // 链下：address = keccak256(0xff ++ factory ++ salt ++ keccak256(initCode))[12:]
   const predicted = ethers.getAddress(

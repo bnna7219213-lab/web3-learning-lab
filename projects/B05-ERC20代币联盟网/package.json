@@ -1,0 +1,14 @@
+{
+  "name": "b05-labtoken-consortium",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "B05 联盟内部记账单位：LabToken 角色治理 + 对账验收（forge 测试 49 项 + 链上验收）",
+  "scripts": {
+    "test": "forge test",
+    "acceptance": "node scripts/01-acceptance.mjs"
+  },
+  "dependencies": {
+    "ethers": "^6.17.0"
+  }
+}

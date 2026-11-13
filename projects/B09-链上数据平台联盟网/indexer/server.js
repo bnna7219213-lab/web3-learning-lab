@@ -32,6 +32,12 @@ export function createServer({ store, scanner, apiKey, port }) {
         return json(res, 200, { ok: true, head, cursor: store.getCursor(), chainKey: scanner?.chainKey }, Date.now() - t0);
       }
       if (p === "/api/stats") return json(res, 200, { ok: true, data: store.stats() }, Date.now() - t0);
+      if (p === "/api/sources") {
+        const rows = store.q("SELECT address, COUNT(*) logs, MIN(blockNumber) firstBlock, MAX(blockNumber) lastBlock FROM logs GROUP BY address ORDER BY address").all();
+        const known = new Map((scanner?.sources ?? []).map((s) => [s.address.toLowerCase(), s]));
+        const data = rows.map((r) => ({ ...r, ...(known.get(r.address.toLowerCase()) ?? { domain: "其他", label: "未登记事件源" }) }));
+        return json(res, 200, { ok: true, data }, Date.now() - t0);
+      }
       if (p === "/api/logs") {
         const { after, limit, ...f } = q;
         return json(res, 200, { ok: true, ...store.queryLogs(f, { after, limit: Math.min(Number(limit) || 20, 100) }) }, Date.now() - t0);
@@ -45,6 +51,16 @@ export function createServer({ store, scanner, apiKey, port }) {
         const rows = store.q(
           `SELECT * FROM holders ${contract ? "WHERE contract = ?" : ""} ORDER BY tokens DESC LIMIT ?`
         ).all(...(contract ? [contract.toLowerCase(), Math.min(Number(limit) || 50, 200)] : [Math.min(Number(limit) || 50, 200)]));
+        return json(res, 200, { ok: true, data: rows }, Date.now() - t0);
+      }
+      if (p === "/api/fungible-balances") {
+        const { contract, address, limit } = q;
+        const where = [];
+        const args = [];
+        if (contract) { where.push("contract = ?"); args.push(contract.toLowerCase()); }
+        if (address) { where.push("address = ?"); args.push(address.toLowerCase()); }
+        args.push(Math.min(Number(limit) || 50, 200));
+        const rows = store.q(`SELECT * FROM fungibleBalances ${where.length ? "WHERE " + where.join(" AND ") : ""} ORDER BY CAST(balance AS INTEGER) DESC LIMIT ?`).all(...args);
         return json(res, 200, { ok: true, data: rows }, Date.now() - t0);
       }
       if (p === "/api/assets") {

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>B04 · 卡单观测与处置台</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <h1>B04 · 卡单观测与处置台</h1>
+      <p class="sub">联盟网 QBFT · 「付不起手续费的交易卡在池里」的观测与已实测处置路径</p>
+    </div>
+    <div id="health" class="health" role="status" aria-live="polite">连接中…</div>
+  </header>
+
+  <main id="main">
+    <!-- ① 卡单实验 -->
+    <section aria-labelledby="h-lab">
+      <h2 id="h-lab">① 造一笔卡单（服务端现场生成账户，私钥不出服务器）</h2>
+      <p class="hint">
+        交易形状与 B04 坑 1 一致：<code>legacy / gasPrice=1 / value=0 / gas=505440</code>，
+        账户余额 0 → 需要 505440 wei 手续费却付不起。因为
+        <code>tx-pool-enable-balance-check=false</code>，它<strong>会进池</strong>：
+        拿得到 hash，却永远等不到 receipt，还占住该账户的 nonce 0。
+      </p>
+      <div class="row">
+        <button id="btn-make" type="button" class="primary">造一笔卡单</button>
+        <button id="btn-refresh" type="button">刷新观测</button>
+        <span id="lab-status" class="hint" role="status" aria-live="polite">还没有实验中的卡单</span>
+      </div>
+      <div class="cards" id="lab-cards"></div>
+    </section>
+
+    <!-- ② 观测 -->
+    <section aria-labelledby="h-observe">
+      <h2 id="h-observe">② 观测：三个等效信号（跨 3 节点）</h2>
+      <p class="hint">
+        不用 <code>txpool_content</code>——它会把全链待处理交易（地址/nonce/金额）暴露到公网 RPC。
+        改用三个等效信号：<strong>in_pool</strong>（tx 非 null 且 blockNumber=null）、
+        <strong>receipt</strong>（卡单恒 null）、<strong>nonce 缺口</strong>（pending nonce &gt; latest nonce）。
+      </p>
+      <div class="row">
+        <label class="sr-only" for="tx-hash">交易哈希</label>
+        <input id="tx-hash" type="text" placeholder="0x…（留空=观测当前实验中的卡单）" spellcheck="false" />
+        <button id="btn-observe" type="button">观测该交易</button>
+      </div>
+      <div id="verdict" class="verdict" role="status" aria-live="polite"></div>
+      <div class="table-wrap">
+        <table id="sig-table">
+          <caption class="sr-only">各节点的卡单信号采样</caption>
+          <thead>
+            <tr>
+              <th scope="col">节点</th>
+              <th scope="col">链高</th>
+              <th scope="col">in_pool</th>
+              <th scope="col">receipt</th>
+              <th scope="col">nonce latest/pending</th>
+              <th scope="col">pending 块含本单</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ③ 处置 -->
+    <section aria-labelledby="h-fix">
+      <h2 id="h-fix">③ 处置：注入最小余额 → 同 nonce 替换</h2>
+      <p class="hint">
+        窗口是硬门槛：<strong>替换成本 ≤ 注入额 &lt; 卡单成本</strong>。
+        注入太小 → 替换交易自己付不起手续费；注入太大 → 卡单自己变成可执行、直接在原 nonce 入块，
+        「看起来解锁了」其实测的根本不是替换。
+      </p>
+      <div class="row">
+        <label for="inject">注入额（wei）</label>
+        <input id="inject" type="number" min="0" step="1" value="100000" />
+        <button id="btn-faucet" type="button">用链上水龙头额度试一下（10 B03）</button>
+        <button id="btn-resolve" type="button" class="danger">执行处置（注入 + 替换）</button>
+      </div>
+      <div id="window" class="verdict" role="status" aria-live="polite"></div>
+      <div class="cards" id="fix-cards"></div>
+    </section>
+
+    <!-- ④ 不提供的能力 -->
+    <section aria-labelledby="h-no">
+      <h2 id="h-no">④ 刻意不提供：把「卡单待人工」做成「一键重启节点」</h2>
+      <div id="no-list"></div>
+    </section>
+
+    <!-- ⑤ 证据 -->
+    <section aria-labelledby="h-ev">
+      <h2 id="h-ev">⑤ 证据留痕</h2>
+      <p class="hint">
+        每次观测与处置都追加一行 JSONL 到 <code>docs/evidence/console-*.jsonl</code>——
+        与 B04 既有的观测留痕同一套习惯：结论可以被第三方复核，而不是只存在于控制台输出里。
+      </p>
+      <div id="evidence" class="hint">尚未产生证据文件</div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    口径说明：本台<strong>只读 + 受控实验</strong>。处置动作只针对本页现场生成的随机账户，
+    注入上限受窗口约束；私钥只留在服务端内存；不提供任何停链级操作。
+  </footer>
+
+  <script src="/app.js"></script>
+</body>
+</html>

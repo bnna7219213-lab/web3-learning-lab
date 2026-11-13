@@ -75,7 +75,7 @@ P08-合约工程化进阶/
 
 | 项 | 结果 |
 |----|------|
-| forge test | **40 passed / 0 failed**（7 suites）；fuzz 500 轮配置生效 |
+| forge test | **40 passed / 0 failed**（7 suites）。⚠️ `foundry.toml` 配了 `fuzz runs=500` / `invariant runs=64`，但**当前 40 条测试全是无参函数，尚未落地 fuzz/invariant 用例**——是配置就绪，不是模糊测试已覆盖（待补，见「待补」） |
 | forge fmt --check | 通过（改动全部格式化后复测） |
 | Gas 对比表入 docs/ | ✓ [docs/01](./docs/01-Gas对比表.md)：5 组数字 + 冷热预热方法论 + 零 gas 链口径 |
 | 代理升级演练含存储槽冲突检查 | ✓ 链上两步演练：存 1 ETH → 升级 V2 → totalDeposited/owner/余额七项保留，实现槽换址；测试含 BadV2 插队复现与 EIP-1967 槽零重叠检查（[docs/02](./docs/02-代理升级与存储槽冲突.md)） |
@@ -105,6 +105,16 @@ P08-合约工程化进阶/
 - [ ] 精读 `hardhat/contracts/defi/LainStaking.sol`（Synthetix 累加器，本金/奖励解耦）与 `market/SplitPayment.sol` 的 `_accPerShare`
 - **待源件**：lainchain 不在本机（公开仓库剥离时未带），不凭印象写对照。源件可得后补 `docs/S3-合约进阶与数据/lainchain对照-P08.md`。
 
+## 待补（本次已识别，尚未做）
+
+1. **Call / Delegatecall 专项缺失**：`roadmap.md` 的 S3 知识点地图把「Call/Delegate、Assembly/Yul」记在 P08，
+   但 `src/` 里没有对应合约与测试（只有 `AccountAbstraction.sol` 里一处 `address(this).call{value:}`）。
+   要么补 `DelegateCallDemo.sol`（含存储碰撞反例）+ 测试 + 文档，要么改 roadmap 口径。
+2. **fuzz / invariant 用例缺失**：见上表脚注。`foundry.toml` 已配好，补用例即可。
+3. **`deployments/latest.json` 语义**：旧实现逐合约覆写 → 只剩最后一个合约；已改为合并写
+   （`deployments/<chainId>/all.json` + `deployments/latest.json`，口径与 B08 一致），磁盘上的历史记录也已修正。
+4. **lainchain 对照**：见上节（外部依赖，源件不在本机）。
+
 ## 复盘
 
 - 卡住的点：**测量方法论比合约本身难**——gas 对账两次被非算法因素污染（冷热时序、读错合约的槽）。
@@ -118,9 +128,16 @@ P08-合约工程化进阶/
   **开工前先引 Slither**（本次没跑，静态分析应在写完 S2 就上，而不是收尾补）；
   gas 实验的预热规范应在第一条对照写之前定死，返工了两轮。
 
-## B08（联盟网分支）待接
+## B08（联盟网分支）—— 已接（2026-11-13 全部落地并实测）
 
-- [ ] Gas 报告改成「区块容量占用 + 出块延迟影响」双指标（零 gas 语义校准 §已立口径）
-- [ ] 一次代理升级演练含全成员参与与回滚方案
-- [ ] 大合约（>24KB）在 contractSizeLimit/pertxgaslimit 配置下部署实测
-- [ ] chainId 变更使 Create2 地址全变的登记机制
+- [x] Gas 报告改成「区块容量占用 + 出块延迟影响」双指标（零 gas 语义校准 §已立口径）→ [B08 scripts/06](../B08-合约工程化联盟网/scripts/06-gas-report.js)
+- [x] 一次代理升级演练含全成员参与与回滚方案 → [B08 scripts/07](../B08-合约工程化联盟网/scripts/07-upgrade-drill.js)（六步 13 断言）
+- [x] 大合约（>24KB）在 contractSizeLimit/pertxgaslimit 配置下部署实测 → [B08 scripts/09](../B08-合约工程化联盟网/scripts/09-big-contract.js)
+- [x] chainId 变更使 Create2 地址全变的登记机制 → [B08 scripts/10](../B08-合约工程化联盟网/scripts/10-create2-chainid.js)
+- [x] （额外）B08 补了零构建运维看板与一键 runner；B08 的工程事件已进 B09 索引并跨项目对账
+      → [B08 docs/06](../B08-合约工程化联盟网/docs/06-工程化运维看板.md)、[docs/07](../B08-合约工程化联盟网/docs/07-B08与B09联动.md)
+
+> B08 相对 P08 的**新增**结论（不在 P08 知识点清单里，是联盟网逼出来的）：
+> 零 gas 下 Gas 优化的目标从"省钱"变成"省区块容量与降出块延迟"；
+> 升级从 owner 单方行为变成多成员签名窗口；大合约卡点是单笔 gas 上限而不是 EIP-170；
+> CREATE2 地址必须与链 ID / 工厂地址一起永久登记。

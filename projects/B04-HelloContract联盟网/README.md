@@ -1,6 +1,6 @@
 # B04 · HelloContract（联盟网）
 
-> 状态：**已实跑（2026-10-16 服务器实测）** ｜ 对应主线：[P04](../P04-HelloContract基础/README.md) ｜ 网络底座：[shared/consortium-network](../../shared/consortium-network/README.md) ｜ 更新：2026-10-16
+> 状态：**已完成（合约部署 + 卡单观测与处置台；2026-11-13 前端/链上端到端 36/36）** ｜ 对应主线：[P04](../P04-HelloContract基础/README.md) ｜ 网络底座：[shared/consortium-network](../../shared/consortium-network/README.md) ｜ 更新：2026-11-13
 > 一句话目标：把 Foundry 写-测-部署闭环平移到 QBFT 联盟链，验证「合约零改动」这个卖点是否真成立。
 >
 > **结论先说：「合约零改动」这句话不成立。** 源码确实一行没改，但**编译与发交易参数必须按网络分档**，
@@ -138,7 +138,7 @@ forge 会用 **default** profile 重新编译，算出 `0x135b9ae5…`，与链�
 ## 与 P04 的关系
 
 **功能实现一致，环境语义不同。**P04 的全部知识点在本分支都要做一遍，本 README 只记录**差异与新增验收**；
-共性差异见 [差异矩阵](../../shared/consortium-network/docs/04-差异矩阵-P03-P08-vs-B03-B08.md)。
+共性差异见 [差异矩阵](../../shared/consortium-network/docs/04-差异矩阵-P03-P09-vs-B03-B09.md)。
 
 | 维度 | P04（公链/anvil） | B04（联盟 QBFT） |
 |------|------------------------|----------------------|
@@ -182,12 +182,31 @@ node register.js --addr <合约地址> --name Counter --source sources/p04/Count
 
 ## 任务拆解
 
-1. [ ] 复用 P04 的实现，切到联盟网 profile
-2. [ ] 多成员账户与 nonce 管理
-3. [ ] 零 gas 相关断言与负例
-4. [ ] 权限（白名单/角色）正例与负例
-5. [ ] 内网可观测（浏览器/日志/审计）
-6. [ ] 文档与截图
+1. [x] 复用 P04 的实现，切到联盟网 profile（源码零改动，编译 profile 换 london）
+2. [x] 多成员账户与 nonce 管理（A/B 两账户各部署一次，nonce 各自 0→1）
+3. [x] 零 gas 相关断言与负例（坑 1：`--gas-price 0` 不带 `--legacy` 的卡单；坑 2：PUSH0）
+4. [ ] 权限（白名单/角色）正例与负例 —— 移交 B08（本链未启用 permissioning）
+5. [x] 内网可观测（浏览器登记 + 卡单观测器 + 三信号判定，见 `scripts/observe-stuck-tx.js`）
+6. [x] 文档与证据（`docs/evidence/`：观测 JSONL + 窗口公式 + 服务器两阶段实验记录）
+
+**2026-11-13 补齐**：`scripts/make-stuck-tx.js`（复现）+ `scripts/observe-stuck-tx.js`（多节点采样）
++ `scripts/verify-stuck-tx-replacement.js`（窗口校验 + 同 nonce 替换处置）三脚本入库并在本地联盟链
+首尾贯通实测（卡单 → 3 节点观测 4 轮 → 替换成立）；证据与复现步骤见 `docs/evidence/README.md`。
+处置脚本默认 `--dry-run`，且**内置窗口校验**（注入额必须落在 `替换成本 ≤ 注入额 < 卡单成本`），
+防止「注入过多 → 卡单自己变可执行」的假阳性实验。
+
+### 卡单观测与处置台（2026-11-13 补齐）
+
+```bash
+cd projects/B04-HelloContract联盟网
+npm install
+npm run serve        # 默认 http://127.0.0.1:8804；可用 PORT=8814 避开其他项目
+npm run smoke        # 独立端口可用 node scripts/12-console-smoke.js --port 8814
+```
+
+页面真实执行：随机账户造卡单 → 三节点 `in_pool/receipt/nonce` 观测 → 小额及 10 B03 超额注入拒绝 → 100000 wei 合法注入与同 nonce 替换。最新冒烟 **36/36**，浏览器实测替换交易在块 30507 `status=1`、原卡单无回执且 nonce `0→1`；证据见 [docs/evidence/](docs/evidence/README.md)。
+
+**不提供重启节点按钮**：单节点重启会被 gossip 回填，全集群重启等同停链。处置台的密钥仅服务端读取，实验私钥只在内存，不提供停链动作。
 
 ## 验收
 

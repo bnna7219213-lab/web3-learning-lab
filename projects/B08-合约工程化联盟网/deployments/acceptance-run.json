@@ -1,0 +1,78 @@
+{
+  "ranAt": "2026-11-12T21:53:37.877Z",
+  "total": 10,
+  "passed": 10,
+  "failed": 0,
+  "steps": [
+    {
+      "id": "02",
+      "file": "02-multi-member.js",
+      "title": "多成员 nonce 隔离",
+      "code": 0,
+      "ms": 4708
+    },
+    {
+      "id": "03",
+      "file": "03-zero-gas.js",
+      "title": "零 gas 断言",
+      "code": 0,
+      "ms": 4591
+    },
+    {
+      "id": "04",
+      "file": "04-finality.js",
+      "title": "终结性（3 节点块哈希）",
+      "code": 0,
+      "ms": 304732
+    },
+    {
+      "id": "05",
+      "file": "05-permission-negative.js",
+      "title": "权限负例留痕",
+      "code": 0,
+      "ms": 8680
+    },
+    {
+      "id": "06",
+      "file": "06-gas-report.js",
+      "title": "Gas 双指标报告",
+      "code": 0,
+      "ms": 50406
+    },
+    {
+      "id": "07",
+      "file": "07-upgrade-drill.js",
+      "title": "多成员升级演练 + 回滚",
+      "code": 0,
+      "ms": 22246
+    },
+    {
+      "id": "08",
+      "file": "08-merkle-crosscheck.js",
+      "title": "Merkle × P01 四方向互验",
+      "code": 0,
+      "ms": 8853
+    },
+    {
+      "id": "09",
+      "file": "09-big-contract.js",
+      "title": "大合约体积与单笔 gas 上限",
+      "code": 0,
+      "ms": 8814
+    },
+    {
+      "id": "10",
+      "file": "10-create2-chainid.js",
+      "title": "Create2 × chainId 登记",
+      "code": 0,
+      "ms": 4585
+    },
+    {
+      "id": "11",
+      "file": "11-dashboard-smoke.js",
+      "title": "运维看板端到端冒烟",
+      "code": 0,
+      "ms": 984
+    }
+  ]
+}

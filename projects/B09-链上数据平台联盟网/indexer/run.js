@@ -13,6 +13,7 @@ const scanner = new Scanner({
   store,
   rpc: cfg.RPC,
   contracts: cfg.watchContracts(),
+  sources: cfg.watchSources(),
   confirmations: cfg.CONFIRMATIONS,
   logChunk: cfg.LOG_CHUNK,
   startBlock: cfg.START_BLOCK,

@@ -119,3 +119,15 @@ node scripts/02-acceptance.mjs
 - [ ] 读 `indexer/`（Python + SQLite 手写扫块）与 `backend/`（Ktor MVP）：列出重组处理缺失项，规划 Spring Boot 重写
 - 输出：`docs/S3-合约进阶与数据/lainchain对照-P09.md`
 
+## 待补（本次已识别，尚未做）
+
+1. **GraphQL 只在设计层，没有实现**：`docs/01-设计.md` 说明了 GraphQL 作为可替换读层（复用同一 Store 查询函数），
+   但仓库里**没有 GraphQL 端点**。`roadmap.md` 曾把 P09 技术栈写成「The Graph / 自建 Node 索引 + Next.js」，
+   实际交付是「自建 Node 索引 + REST + **零构建**静态页（无 Next.js、无 The Graph）」——roadmap 口径已更正。
+2. **Spring Boot + web3j 对接**：见知识点第 6 条，属后续项；REST 契约已固定（设计文档 §4），Java 侧直接消费即可。
+3. **事件注册表手写 14 条签名**：应从 `abi/*.json` 自动生成（B09 已按同一口径扩展到 22 条，见
+   [`B09/docs/03-B08事件源联动.md`](../B09-链上数据平台联盟网/docs/03-B08事件源联动.md)）。
+4. **无单元测试 / 无 CI**：本项目的验证手段是端到端验收脚本（20 项），没有引入测试框架。
+   索引器的重组协议是最值得补单测的部分（回滚/重放分支多）。
+5. **lainchain 对照精读**：见上节（外部依赖，源件不在本机）。
+

@@ -56,7 +56,17 @@ CREATE INDEX IF NOT EXISTS idx_logs_to     ON logs(toAddr);
 CREATE INDEX IF NOT EXISTS idx_logs_token  ON logs(tokenId);
 CREATE INDEX IF NOT EXISTS idx_logs_batch  ON logs(batch);
 
--- 派生状态：由 logs 重放得到（rollback 后 rebuild_assets 全量重算，保证与链上一致）
+-- ERC20 与 ERC721 的 Transfer topic0 相同、索引布局不同：必须按日志结构区分，
+-- 否则 ERC20 的 value 会被误当成 NFT tokenId。
+CREATE TABLE IF NOT EXISTS transferKinds (
+  blockHash TEXT NOT NULL,
+  logIndex  INTEGER NOT NULL,
+  kind      TEXT NOT NULL CHECK(kind IN ('erc20', 'erc721')),
+  PRIMARY KEY(blockHash, logIndex),
+  FOREIGN KEY(blockHash, logIndex) REFERENCES logs(blockHash, logIndex) ON DELETE CASCADE
+);
+
+-- 派生状态：由 logs 重放得到（rollback 后 rebuildAssets 全量重算，保证与链上一致）
 CREATE TABLE IF NOT EXISTS assets (
   contract  TEXT NOT NULL,
   tokenId   TEXT NOT NULL,
@@ -74,6 +84,14 @@ CREATE TABLE IF NOT EXISTS holders (
   PRIMARY KEY(contract, address)
 );
 
+-- 独立存 ERC20 最小单位余额；不能复用 holders.tokens（那是 NFT 数量语义）。
+CREATE TABLE IF NOT EXISTS fungibleBalances (
+  contract TEXT NOT NULL,
+  address  TEXT NOT NULL,
+  balance  TEXT NOT NULL,
+  PRIMARY KEY(contract, address)
+);
+
 -- 游标：单行（id=1），lastBlock/lastHash 用于断点续扫与重组检测
 CREATE TABLE IF NOT EXISTS cursor (
   id        INTEGER PRIMARY KEY CHECK(id = 1),
@@ -81,5 +99,13 @@ CREATE TABLE IF NOT EXISTS cursor (
   lastBlock INTEGER NOT NULL,
   lastHash  TEXT,
   updatedAt INTEGER NOT NULL
+);
+
+-- 运行期元信息：事件源清单指纹等。
+-- 用途：新增/移除被索引的合约时，指纹变化 → 游标退回起点全量重扫，
+--       否则新合约的历史事件永远扫不到（游标已经过去了）——这是真实踩过的坑。
+CREATE TABLE IF NOT EXISTS meta (
+  key   TEXT PRIMARY KEY,
+  value TEXT
 );
 

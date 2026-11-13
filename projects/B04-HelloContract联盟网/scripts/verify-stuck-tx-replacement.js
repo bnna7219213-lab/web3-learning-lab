@@ -1,107 +1,134 @@
 #!/usr/bin/env node
-// 验证「最小余额 + 同 nonce 更高 gasPrice 空交易」能否解锁被卡单占住 nonce 的账户。
+// scripts/verify-stuck-tx-replacement.js —— 「卡单」处置：同 nonce 替换（带窗口校验的破坏性操作）
 //
-// 为什么不复用 0x4C0535… 那笔现成卡单：它的私钥是 observe-stuck-tx.js 在内存里
-// 随机生成的、故意没落盘（落盘就等于把私钥写进日志和仓库）。要替它签名只能重造，
-// 那就干脆全程用可控样本 —— 顺带让"造卡单 → 注入 → 替换 → 复可用"整条链可复现。
+// 处置路径（B04 实测过的那条）：给卡单账户注入**最小余额**，
+// 再用**同 nonce、更高 gasPrice、更低 gas** 的空交易替换它。
 //
-// 关键设计（不想清楚就会得出假结论）：
-//   卡单是 gasPrice=1 / gas=505440 / value=0，成本 505440 wei。
-//   若按水龙头固定额度注入 10 B03（1e19 wei），卡单本身立刻变成可执行，
-//   它会在 nonce 0 上直接入块 —— 账户"看起来解锁了"，其实是原交易跑了，
-//   跟替换无关。这样得到的运维指引是错的。
-//   注入额必须落在窗口内：
-//     替换成本 21000×2 = 42,000  ≤  FUND  <  505,440 = 卡单成本
-//   取 100,000 wei：卡单始终付不起，nonce 0 能前进就只能是替换的功劳。
+// ⚠ 必须落在窗口：  替换成本 ≤ 注入额 < 卡单成本
+//    替换成本 = replaceGas × replaceGasPrice（默认 21000 × 2 = 42000 wei）
+//    卡单成本 = stuckGas × stuckGasPrice（如 505440 × 1 = 505440 wei）
+//    注入额太小 → 替换交易自己付不起手续费；注入额太大（比如水龙头一次打 10 B03）
+//    → 卡单本身变得可执行、直接在原 nonce 入块，"看起来解锁了"其实测的根本不是替换。
 //
-// 跑法（服务器上，全程 127.0.0.1，不经公网）：
-//   cd /opt/b03-indexer && node verify-stuck-tx-replacement.js
+// 用法:
+//   node scripts/verify-stuck-tx-replacement.js <txHash> --inject 100000 --dry-run
+//   node scripts/verify-stuck-tx-replacement.js <txHash> --inject 100000 --execute \
+//        --rpc http://127.0.0.1:8551 --key 0x... --from 0xYOUR_SENDER
+//
+// 默认 dry-run（只算窗口 + 打印计划）；--execute 才真正发交易。
+// --from 可省略（从链上 tx.from 读），--key 是卡单账户的私钥（用来签替换交易）。
+
+const fs = require("fs");
+const path = require("path");
 const { ethers } = require("ethers");
 
-const RPC = process.env.RPC || "http://127.0.0.1:8551";
-const FAUCET = process.env.FAUCET || "http://127.0.0.1:8560";
-const CHAIN_ID = 19880601;
-const STUCK_GAS = 505440n, STUCK_PRICE = 1n;
-const REPL_gas = 21000n, REPL_PRICE = 2n;
-const FUND = 100000n;
-
-const p = new ethers.JsonRpcProvider(RPC, CHAIN_ID, { staticNetwork: true });
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-const needStuck = STUCK_GAS * STUCK_PRICE;   // 505440
-const needRepl = REPL_gas * REPL_PRICE;      // 42000
-
-async function mineOne() { const h = await p.getBlockNumber(); while ((await p.getBlockNumber()) < h + 1) await sleep(1000); }
-async function waitForReceipt(hash, tries = 40) {
-  for (let i = 0; i < tries; i++) { const r = await p.getTransactionReceipt(hash); if (r) return r; await sleep(2000); }
-  return null;
+function arg(name, dflt) {
+  const i = process.argv.indexOf(`--${name}`);
+  return i >= 0 && process.argv[i + 1] ? process.argv[i + 1] : dflt;
 }
+const txHash = process.argv[2] && !process.argv[2].startsWith("--") ? process.argv[2] : null;
+if (!txHash) {
+  console.error("用法: node scripts/verify-stuck-tx-replacement.js <txHash> --inject <wei> [--execute] [--rpc URL] [--key 0x..] [--from 0x..]");
+  process.exit(1);
+}
+const EXECUTE = process.argv.includes("--execute");
+const RPC = arg("rpc", "http://127.0.0.1:8551");
+const KEY = arg("key", process.env.STUCK_TX_KEY || "");
+const FROM = arg("from", "");
+const INJECT = BigInt(arg("inject", "100000"));
+const REPLACE_GAS = 21000n;
+const REPLACE_GAS_PRICE = 2n;
 
 (async () => {
-  if (!(FUND >= needRepl && FUND < needStuck)) {
-    console.log(`❌ 注入额设计错误：需 ${needRepl} ≤ FUND < ${needStuck}，实际 ${FUND}`);
+  const provider = new ethers.JsonRpcProvider(RPC, undefined, { staticNetwork: true });
+  const stuck = await provider.getTransaction(txHash);
+  if (!stuck) throw new Error(`链上找不到交易 ${txHash}`);
+  const sender = (FROM || stuck.from).toLowerCase();
+  const stuckCost = BigInt(stuck.gasLimit) * BigInt(stuck.gasPrice ?? stuck.maxFeePerGas ?? 0n);
+  const replaceCost = REPLACE_GAS * REPLACE_GAS_PRICE;
+  const nonce = stuck.nonce;
+
+  console.log(`卡单 ${txHash}`);
+  console.log(`  账户 ${sender}  nonce ${nonce}  gasPrice ${stuck.gasPrice ?? stuck.maxFeePerGas}  gas ${stuck.gasLimit}`);
+  console.log(`  卡单成本 = ${stuck.gasLimit} × ${stuck.gasPrice ?? stuck.maxFeePerGas} = ${stuckCost} wei`);
+  console.log(`  替换成本 = ${REPLACE_GAS} × ${REPLACE_GAS_PRICE} = ${replaceCost} wei`);
+  console.log(`  注入额   = ${INJECT} wei`);
+
+  // —— 窗口校验（README 里那个 ⚠ 前提）——
+  const inWindow = INJECT >= replaceCost && INJECT < stuckCost;
+  if (!inWindow) {
+    console.error(`✗ 注入额不在窗口内（要求 替换成本 ${replaceCost} ≤ 注入额 < 卡单成本 ${stuckCost}）。`);
+    console.error("  太小 → 替换交易付不起手续费；太大 → 卡单自己变可执行，实验会给出无效的操作指引。");
     process.exit(2);
   }
-  console.log(`注入窗口：替换需 ${needRepl} ≤ ${FUND} < 卡单需 ${needStuck}  ✅ 卡单将始终付不起`);
+  console.log("✓ 窗口校验通过：替换成本 ≤ 注入额 < 卡单成本");
 
-  // 1) 助手账户：走水龙头拿零钱（不动运营方私钥，也不用其额度做实验资金）
-  console.log("\n=== 1) 助手账户领币 ===");
-  const H = ethers.Wallet.createRandom().connect(p);
-  const fr = await fetch(`${FAUCET}/claim`, {
-    method: "POST", headers: { "content-type": "application/json" },
-    body: JSON.stringify({ address: H.address }),
-  });
-  const fj = await fr.json();
-  if (!fr.ok) { console.log("  ❌ 领币失败：", fj.error); process.exit(2); }
-  console.log(`  ${H.address.slice(0, 10)}… 领到 ${fj.amount} B03`);
-  await mineOne();
+  const rec0 = await provider.getTransactionReceipt(txHash);
+  const acct = await provider.getTransactionCount(sender, "latest");
+  const pend = await provider.getTransactionCount(sender, "pending");
+  console.log(`  当前 receipt=${rec0 ? rec0.status : "null"}  nonce latest=${acct} pending=${pend}`);
+  if (rec0) {
+    console.log("该交易已有回执，不是卡单，无需替换。");
+    process.exit(0);
+  }
 
-  // 2) 目标账户：零余额，先造一笔卡单
-  console.log("\n=== 2) 制造卡单（零余额账户发付不起的交易）===");
-  const B = ethers.Wallet.createRandom().connect(p);
-  const stuck = await B.sendTransaction({ to: H.address, value: 0n, gasLimit: STUCK_GAS, gasPrice: STUCK_PRICE, type: 0 });
-  await sleep(3000);
-  const s0 = await p.getTransaction(stuck.hash);
-  const n0 = await p.getTransactionCount(B.address, "latest");
-  const pd0 = await p.getTransactionCount(B.address, "pending");
-  console.log(`  卡单 ${stuck.hash.slice(0, 18)}…  在池=${!!s0 && s0.blockNumber == null}  nonce ${n0}/${pd0}`);
-  if (!s0 || s0.blockNumber != null || pd0 <= n0) { console.log("  ❌ 卡单未进池，前提不成立"); process.exit(3); }
-
-  // 3) 注入窗口内余额
-  console.log("\n=== 3) 注入最小余额 ===");
-  await (await H.sendTransaction({ to: B.address, value: FUND, gasLimit: 21000n, gasPrice: 0, type: 0 })).wait();
-  const bal = await p.getBalance(B.address);
-  console.log(`  余额 ${bal} wei`);
-  if (bal >= needStuck) { console.log(`  ❌ 已够卡单执行（${needStuck}），实验会被污染，中止`); process.exit(3); }
-  console.log(`  ✅ 仍 < ${needStuck}，卡单依然付不起`);
-
-  // 4) 替换：同 nonce=0、gasPrice 更高、gas 更低、value=0 的空交易
-  console.log("\n=== 4) 同 nonce 替换 ===");
-  const rep = await B.sendTransaction({ to: B.address, value: 0n, gasLimit: REPL_gas, gasPrice: REPL_PRICE, type: 0, nonce: 0 });
-  console.log(`  替换交易 ${rep.hash.slice(0, 18)}…`);
-  const rec = await waitForReceipt(rep.hash);
-  const stillThere = await p.getTransaction(stuck.hash);
-  const nAfter = await p.getTransactionCount(B.address, "latest");
-
-  console.log("\n=== 结果 ===");
-  console.log(`  替换交易入块 : ${rec ? `是，status=${rec.status}，块 #${rec.blockNumber}` : "否（80 秒内无 receipt）"}`);
-  console.log(`  原卡单状态   : ${stillThere ? `仍可查到 blockNumber=${stillThere.blockNumber}` : "已从池中消失（被顶替）"}`);
-  console.log(`  账户 nonce   : ${n0} → ${nAfter}`);
-
-  const unlocked = !!rec && rec.status === 1 && nAfter >= 1;
-  if (!unlocked) {
-    console.log("\n  ❌ 替换未生效 —— 「最小余额+同 nonce 替换」这条处置动作不可用，文档必须改掉。");
+  if (!EXECUTE) {
+    console.log("\n[dry-run] 计划：");
+    console.log(`  1) 给 ${sender} 注入 ${INJECT} wei`);
+    console.log(`  2) 发替换交易: nonce=${nonce} gasPrice=${REPLACE_GAS_PRICE} gas=${REPLACE_GAS} value=0（同 nonce 更高价更省 gas）`);
+    console.log("  3) 断言: 原卡单 receipt != null 且不为执行成功（或从 pending 消失）、替换交易入块 status=1、账户 nonce 前进");
+    console.log("\n加 --execute 执行（需要 --key 签名替换交易）。");
     return;
   }
-  console.log("\n  ✅ 替换生效：nonce 0 被替换交易占住并入块，卡单被顶掉");
 
-  // 5) 真可用性验证：账户后续交易能正常走
-  console.log("\n=== 5) 复可用验证（再发一笔新交易）===");
-  const t3 = await B.sendTransaction({ to: H.address, value: 1n, gasLimit: 21000n, gasPrice: 0, type: 0 });
-  const r3 = await t3.wait();
-  // nonce 取交易本身或链上计数：ethers v6 的 receipt 上没有 nonce 字段，
-  // 直接写 r3.nonce 会打出 undefined（脚本自己踩过，别把"报告字段错"当成"实验失败"）
-  console.log(`  ✅ 新交易入块 #${r3.blockNumber}，nonce=${t3.nonce ?? await p.getTransactionCount(B.address, "latest") - 1}，status=${r3.status}`);
-  const finalBal = await p.getBalance(B.address);
-  console.log(`  账户最终余额 ${finalBal} wei（未被卡单吞掉）`);
-  console.log("\n结论：该处置路径成立 —— 前提是注入额严格小于卡单成本，否则测的是原交易能否执行而非替换是否生效。");
-})().catch((e) => { console.error("异常：", e.shortMessage || e.message); process.exit(1); });
+  if (!KEY) {
+    console.error("✗ --execute 需要 --key（卡单账户私钥）来签替换交易");
+    process.exit(1);
+  }
+  const wallet = new ethers.Wallet(KEY, provider);
+  if (wallet.address.toLowerCase() !== sender) throw new Error(`--key 对应 ${wallet.address}，与卡单账户 ${sender} 不符`);
+
+  // 1) 注入最小余额（从注入源账户或直接由 wallet 自己？注入要从外部来——用 env INJECT_KEY 或要求链上已有余额的账户）
+  const injectKey = arg("inject-key", process.env.INJECT_KEY || "");
+  if (injectKey) {
+    const funder = new ethers.Wallet(injectKey, provider);
+    const tx = await funder.sendTransaction({ to: wallet.address, value: INJECT, gasLimit: 21000n, gasPrice: 0n, type: 0 });
+    await tx.wait();
+    console.log(`✓ 已注入 ${INJECT} wei（来自 ${funder.address}）`);
+  } else {
+    const bal = await provider.getBalance(wallet.address);
+    if (bal < INJECT) throw new Error(`账户余额 ${bal} < 注入额 ${INJECT}，且未给 --inject-key；请先注入`);
+    console.log(`✓ 账户已有余额 ${bal} ≥ 注入额，跳过注入`);
+  }
+
+  // 2) 同 nonce 替换（legacy、更高 gasPrice、更低 gas、value=0）
+  const replacement = await wallet.sendTransaction({
+    to: wallet.address,
+    value: 0n,
+    nonce,
+    gasLimit: REPLACE_GAS,
+    gasPrice: REPLACE_GAS_PRICE,
+    type: 0,
+  });
+  console.log(`替换交易已发: ${replacement.hash}（nonce ${nonce}）`);
+  const rec = await replacement.wait();
+  console.log(`替换交易回执: status=${rec.status} block=${rec.blockNumber} gasUsed=${rec.gasUsed}`);
+
+  // 3) 断言
+  const stuckAfter = await provider.getTransaction(txHash);
+  const stuckRec = await provider.getTransactionReceipt(txHash);
+  const nonceAfter = await provider.getTransactionCount(sender, "latest");
+  console.log("\n结果：");
+  console.log(`  原卡单: blockNumber=${stuckAfter ? stuckAfter.blockNumber : "已从池中消失"} receipt=${stuckRec ? stuckRec.status : "null"}`);
+  console.log(`  账户 nonce: ${acct} → ${nonceAfter}`);
+  // ethers v6 的 receipt.status 是 number（不是 bigint）；替换成立 = 替换交易入块成功
+  // 且原卡单从未执行成功（receipt 缺失或 status≠1）
+  const stuckExecuted = !!(stuckRec && Number(stuckRec.status) === 1);
+  const replaced = Number(rec.status) === 1 && nonceAfter === Number(nonce) + 1 && !stuckExecuted;
+  if (replaced) {
+    console.log("✓ 替换成功：替换交易入块且 nonce 前进，原卡单被顶掉");
+  } else {
+    console.log("✗ 替换结果异常，请用 observe-stuck-tx.js 继续观测并人工核对");
+    process.exit(1);
+  }
+})();

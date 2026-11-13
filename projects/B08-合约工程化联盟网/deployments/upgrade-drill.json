@@ -1,5 +1,5 @@
 {
-  "drilledAt": "2026-11-12T19:35:08.579Z",
+  "drilledAt": "2026-11-12T21:53:14.402Z",
   "manifest": {
     "change": "VaultV1 -> VaultV2 (UUPS)",
     "proxy": "0xeB4b754e08E0Dcb9EC4c91C1c5075baDBb6da322",
@@ -21,7 +21,7 @@
     },
     {
       "tag": "after-upgrade",
-      "impl": "0xf7823f7b5910e6c097069397f267380205dc621f",
+      "impl": "0x7886c6bc72124bbe0f15ce674f908b81646a5ea1",
       "slot2TotalDeposited": "0",
       "owner": "0x240c383184AAf85fa4F12B6846Ec5c8c5f48EB8B",
       "version": "1"
@@ -34,7 +34,7 @@
       "version": "1"
     }
   ],
-  "upgradeTx": "0xb1f1c34c2cc36a5e848442b0c0ceefdc52b6a016915f12566653a4843e182a4a",
-  "rollbackTx": "0x14570c094af16f8e184927035a892d64eb41f8682a8bf03325d87d3dee48aea9",
+  "upgradeTx": "0x9738c4d3187fa3489d73f454b78069ab9b37997b1514482dcdbde4ce9c49f2cb",
+  "rollbackTx": "0xd3a52a074479abafa129dcd0f2d9d83f3073f97225dcd26ecdcaa36b7bf57b3c",
   "conclusion": "代码可回滚（实现槽回 V1）；存储不回滚——若执行过 migrateFromV1，version=2 会留在链上，回滚方案必须配套数据订正"
 }

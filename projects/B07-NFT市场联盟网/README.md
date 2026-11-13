@@ -6,7 +6,7 @@
 ## 与 P07 的关系
 
 **功能实现一致，环境语义不同。**P07 的全部知识点在本分支都做了一遍，本 README 只记录**差异与新增验收**；
-共性差异见 [差异矩阵](../../shared/consortium-network/docs/04-差异矩阵-P03-P08-vs-B03-B08.md)。
+共性差异见 [差异矩阵](../../shared/consortium-network/docs/04-差异矩阵-P03-P09-vs-B03-B09.md)。
 
 | 维度 | P07（公链/anvil） | B07（联盟 QBFT） | B07 的落点 |
 |------|------------------------|----------------------|---|
@@ -240,3 +240,7 @@ node scripts/09-budget-governance.js                        # 预算治理验收
   链上没有别的业务语义可用，就得引入独立的签发账户把两类发放分开。
   「更严格的口径」第一件事是让原先被掩盖的口径歧义显形。
 - 待补：P08 的零 gas 语义讨论（「省 gas」变「省区块容量」）、每地址每日领取上限、多签治理。
+
+## 与 B09 联动
+
+B09 从本项目 `deployments/latest.json` 发现 `LabCredential` 与 `LabFaucet`，将发证、凭证流转、权限拒绝、领取和额度变更纳入统一索引。`CredentialIssued.count` 与链上 `nextId`、`Payout` 与链上日志、NFT 持有人与资产数分别对账。B05/B06/B08 的业务和工程事件也可在同一 B09 看板按业务域筛选，详见[全联盟链路全景](../../shared/consortium-network/docs/06-全联盟链路全景.md)。

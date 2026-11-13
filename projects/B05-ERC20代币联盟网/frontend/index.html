@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>P05 · LabToken 面板（零依赖）</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header>
+  <h1>P05 · LabToken 面板</h1>
+  <p class="note">零依赖：fetch 直连 JSON-RPC，ABI 编解码手写（P06 才引库）。
+  学习记账单位 LAB，零价值；写演示仅适用于 anvil 解锁账户。</p>
+  <label>RPC <input id="rpc" value="http://127.0.0.1:8545" size="32"></label>
+  <label>合约 <input id="token" value="" size="44" placeholder="0x…（留空读 deployments/latest.json）"></label>
+  <button id="load">加载</button>
+</header>
+
+<main>
+  <section><h2>① 元数据与供应</h2><div id="meta" class="kv"></div></section>
+  <section><h2>② 字节码指纹核对</h2><div id="fingerprint" class="kv"></div></section>
+  <section><h2>③ 地址查询（余额 / 授权 / permit nonce）</h2>
+    <label>持有人 <input id="holder" size="44" placeholder="0x…"></label>
+    <label>被授权人 <input id="spender" size="44" placeholder="0x…（可空）"></label>
+    <button id="lookup">查询</button>
+    <div id="lookupOut" class="kv"></div>
+  </section>
+  <section><h2>④ Transfer 事件（最近 500 块）</h2><div id="events"></div></section>
+  <section><h2>⑤ 转账演示（anvil 解锁账户 0xf39F…2266 签名）</h2>
+    <label>收款 <input id="to" size="44" placeholder="0x…"></label>
+    <label>金额 LAB <input id="amount" value="10" size="12"></label>
+    <button id="send">发送 transfer</button>
+    <div id="sendOut" class="kv"></div>
+  </section>
+  <section><h2>⑥ 选择器登记（abi/LabToken.selectors.json）</h2><div id="selectors"></div></section>
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>

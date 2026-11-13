@@ -1,0 +1,18 @@
+{
+  "note": "B05 角色矩阵配置（与 test/RoleMatrix.t.sol 的格子一一对应）；地址为本地联盟网 4 个验证者账户兼成员账户",
+  "chainId": 19880601,
+  "roles": {
+    "admin": "0x240c383184AAf85fa4F12B6846Ec5c8c5f48EB8B",
+    "minter": "0x9de4De69C1b85eC62cd3c65A9DdbAbF6F0B18585",
+    "auditor": "0xB4e210662463C6747Fd235106995C4f9C50b1728",
+    "member": "0xB4e210662463C6747Fd235106995C4f9C50b1728",
+    "outsider": "0xBcc5e353c79963E9F9A8B5cC731bA88e614A4aF5"
+  },
+  "matrix": {
+    "mint": ["admin", "minter"],
+    "burnOwn": ["admin", "minter", "member"],
+    "burnFrom": ["needsAllowance"],
+    "grantRole": ["admin"],
+    "revokeRole": ["admin"]
+  }
+}

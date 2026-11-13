@@ -1,114 +1,93 @@
 #!/usr/bin/env node
-// 受控实验：证明"付不起但已进池"的交易在**无人干预**下是否一直留在交易池。
+// scripts/observe-stuck-tx.js —— 「卡单」观测器（只读，不发交易）
 //
-// 为什么需要这个脚本：B04 README 原来写"不会自己消失，重启节点才清出交易池"，
-// 并称之为"运维事实"。但它只有"重启前后各查一次"的观测——那个设计证不了因果：
-// 交易也可能被节点按 TTL / 池上限自行丢弃，或被同 nonce 的后续交易替换掉。
-// 要归因给重启，必须先证明**不重启时它还在**，重启才是唯一的自变量。
-// 所以本脚本只跑观察期（阶段 1），重启由人工另行授权（阶段 2）。
+// 背景（B04 坑 1）：零 gas 链 + tx-pool-enable-balance-check=false 时，
+// 付不起手续费的交易会「拿到 hash、进池、永远不入块」。本脚本按固定间隔采样，
+// 用**三个等效信号**判定它是否卡在池里（不用 txpool_content——它会把全链待处理
+// 交易暴露到公网 RPC）：
+//   in_pool      = eth_getTransactionByHash 非 null 且 blockNumber == null
+//   receipt      = eth_getTransactionReceipt（卡单恒 null）
+//   nonce_gap    = pending nonce > latest nonce（该账户有交易悬着）
+//   pending_blk  = eth_getBlockByNumber("pending") 里能看到它
 //
-// 跑法（在服务器上，走 127.0.0.1，不经公网）：
-//   node observe-stuck-tx.js --minutes 15 --interval 60
-// 依赖 ethers（B03 索引器目录里已有）：
-//   cd /opt/b03-indexer && node /path/observe-stuck-tx.js
+// 用法:
+//   node scripts/observe-stuck-tx.js <txHash> [--minutes 15] [--interval 60]
+//        [--rpc http://127.0.0.1:8551] [--nodes 8551,8552,8553] [--out docs/evidence]
 //
-// 不用 txpool_content 的原因：Besu 只有一个 HTTP RPC 端口，而它被 nginx 公网反代，
-// 开 txpool 等于把全链待处理交易（地址/nonce/金额）暴露出去。改用三个等效信号：
-//   tx 非 null 且 blockNumber==null  → 在池中未入块
-//   pending nonce > latest nonce     → 该账户确有排队交易
-//   getBlock("pending")              → 待处理块存在
-const path = require("path");
+// 输出: <out>/observe-<txHash前10位>-<时间戳>.jsonl（每行一次采样）+ 控制台摘要。
+// 采样覆盖「不重启」与「重启后」两种阶段：重启节点后 in_pool 的变化是清池证据，
+// 但**必须延时复查**——gossip 会在几分钟内把交易回填（见 docs/evidence/README.md）。
+
 const fs = require("fs");
-const { ethers } = require("ethers");
+const path = require("path");
 
-// 只走本机：这个实验会产生一笔永久无法执行的交易，不该让公网路径参与
-const RPC = process.env.RPC || "http://127.0.0.1:8551";
-const CHAIN_ID = 19880601;
-const MINUTES = Number((process.argv.find((a, i) => process.argv[i - 1] === "--minutes") || 15));
-const INTERVAL = Number((process.argv.find((a, i) => process.argv[i - 1] === "--interval") || 60)) * 1000;
-// 落 /root 而不是 /var/tmp：这台机器的 /var/tmp 会被 tmpfiles 清理
-// （正是 <your-domain.example> 主站 502 的根因），实验数据不该冒被清掉的风险。
-const OUT = process.env.OUT || `/root/b03-stuck-tx-${new Date().toISOString().slice(0, 10)}.csv`;
+function arg(name, dflt) {
+  const i = process.argv.indexOf(`--${name}`);
+  return i >= 0 && process.argv[i + 1] ? process.argv[i + 1] : dflt;
+}
+const txHash = process.argv[2] && !process.argv[2].startsWith("--") ? process.argv[2] : null;
+if (!txHash) {
+  console.error("用法: node scripts/observe-stuck-tx.js <txHash> [--minutes 15] [--interval 60] [--rpc URL] [--nodes 8551,8552,8553] [--out DIR]");
+  process.exit(1);
+}
+const RPC = arg("rpc", "http://127.0.0.1:8551");
+const NODES = arg("nodes", "8551,8552,8553").split(",").map((s) => s.trim()).map((p) => (/^http/.test(p) ? p : `http://127.0.0.1:${p}`));
+const MINUTES = Number(arg("minutes", 15));
+const INTERVAL = Number(arg("interval", 60));
+const OUT = arg("out", path.join(__dirname, "..", "docs", "evidence"));
 
-const p = new ethers.JsonRpcProvider(RPC, CHAIN_ID, { staticNetwork: true });
+async function rpc(url, method, params = []) {
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }),
+  });
+  const j = await res.json();
+  return j.result ?? null; // 观测器不因单点错误退出
+}
 
-async function snap(tag, addr, hash) {
-  const [tx, rec, latest, pending, head, pendBlk, bal] = await Promise.all([
-    p.getTransaction(hash).catch(() => null),
-    p.getTransactionReceipt(hash).catch(() => null),
-    p.getTransactionCount(addr, "latest"),
-    p.getTransactionCount(addr, "pending"),
-    p.getBlockNumber(),
-    p.getBlock("pending").catch(() => null),
-    p.getBalance(addr),
-  ]);
-  // inPool 的判据要三条同时成立，单看 tx 非 null 不够：
-  // 节点可能仍缓存已入块交易的回查结果
-  const inPool = !!tx && tx.blockNumber == null && pending > latest;
-  const row = {
-    at: new Date().toISOString(), phase: tag, height: head,
-    tx_seen: !!tx, tx_block: tx ? tx.blockNumber : null,
-    tx_gasPrice: tx ? tx.gasPrice?.toString() : null, tx_type: tx ? tx.type : null,
-    receipt: !!rec, receipt_status: rec ? rec.status : null,
-    nonce_latest: latest, nonce_pending: pending,
-    account_balance: bal.toString(),
-    pending_block: !!pendBlk,
-    in_pool: inPool,
+async function sample(url) {
+  const tx = await rpc(url, "eth_getTransactionByHash", [txHash]);
+  const rec = await rpc(url, "eth_getTransactionReceipt", [txHash]);
+  let latest = null;
+  let pending = null;
+  if (tx && tx.from) {
+    latest = await rpc(url, "eth_getTransactionCount", [tx.from, "latest"]);
+    pending = await rpc(url, "eth_getTransactionCount", [tx.from, "pending"]);
+  }
+  const pendBlk = await rpc(url, "eth_getBlockByNumber", ["pending", true]);
+  const head = await rpc(url, "eth_blockNumber");
+  return {
+    url,
+    head: head ? Number(BigInt(head)) : null,
+    tx_seen: !!tx,
+    in_pool: !!tx && tx.blockNumber === null,
+    receipt: rec ? rec.status : null,
+    nonce_latest: latest ? Number(BigInt(latest)) : null,
+    nonce_pending: pending ? Number(BigInt(pending)) : null,
+    pending_block_has_tx: !!(pendBlk && pendBlk.transactions && pendBlk.transactions.some((t) => (t.hash || t) === txHash)),
   };
-  return row;
 }
 
 (async () => {
-  // 一次性账户：零余额。这正是 B04 现场的条件（部署账户从未领过币）。
-  const w = ethers.Wallet.createRandom().connect(p);
-  const addr = w.address;
-
-  // 复现 B04 那笔：legacy、gasPrice=1 wei、value=0、gas 足够大。
-  // 需要的余额 = gas * 1 wei + value ≈ 505440 wei，而账户余额为 0 → 永远无法执行；
-  // 但 tx-pool-enable-balance-check=false 让它进池。
-  console.log(`实验账户 ${addr}  余额 0  RPC ${RPC}`);
-  const txreq = { to: "0x000000000000000000000000000000000000E51D", value: 0n, gasLimit: 505440n, gasPrice: 1n, type: 0 };
-  let tx;
-  try {
-    tx = await w.sendTransaction(txreq);
-  } catch (e) {
-    console.log("❌ 广播即被拒（与预期不同，这本身是结论）：", (e.shortMessage || e.message || "").slice(0, 200));
-    process.exit(2);
+  fs.mkdirSync(OUT, { recursive: true });
+  const file = path.join(OUT, `observe-${txHash.slice(0, 10)}-${Date.now()}.jsonl`);
+  console.log(`观测 ${txHash}`);
+  console.log(`节点: ${NODES.join(", ")}   间隔 ${INTERVAL}s × ${MINUTES}min   输出 ${file}`);
+  const rounds = Math.max(1, Math.round((MINUTES * 60) / INTERVAL));
+  for (let i = 0; i < rounds; i++) {
+    const at = new Date().toISOString();
+    for (const url of NODES) {
+      const s = await sample(url);
+      const line = JSON.stringify({ at, ...s });
+      fs.appendFileSync(file, line + "\n");
+      console.log(
+        `[${at}] ${url.replace(/^http:\/\//, "")} head=${s.head} in_pool=${s.in_pool} receipt=${s.receipt} nonce=${s.nonce_latest}/${s.nonce_pending} pending_blk=${s.pending_block_has_tx}`
+      );
+    }
+    if (i < rounds - 1) await new Promise((r) => setTimeout(r, INTERVAL * 1000));
   }
-  console.log(`已广播 ${tx.hash}`);
-
-  const first = await snap("t+0", addr, tx.hash);
-  if (!first.in_pool) {
-    console.log("❌ 交易未进池，实验前提不成立 —— 记录实际观测：", JSON.stringify(first));
-    fs.writeFileSync(OUT.replace(/\.csv$/, "-rejected.json"), JSON.stringify(first, null, 2));
-    process.exit(3);
-  }
-
-  const cols = Object.keys(first);
-  const exists = fs.existsSync(OUT);
-  if (!exists) fs.writeFileSync(OUT, cols.join(",") + "\n");
-  const write = (r) => fs.appendFileSync(OUT, cols.map((c) => r[c]).join(",") + "\n");
-  write(first);
-  console.log(`t+0 在池 ✅  观察 ${MINUTES} 分钟，每 ${INTERVAL / 1000}s 一次 → ${OUT}`);
-
-  const n = Math.max(1, Math.floor((MINUTES * 60 * 1000) / INTERVAL));
-  let lost = null;
-  for (let i = 1; i <= n; i++) {
-    await new Promise((r) => setTimeout(r, INTERVAL));
-    const r = await snap(`t+${i * (INTERVAL / 1000)}s`, addr, tx.hash);
-    write(r);
-    console.log(`  ${r.at} height=${r.height} in_pool=${r.in_pool} nonce ${r.nonce_latest}/${r.nonce_pending} receipt=${r.receipt}`);
-    if (!r.in_pool) { lost = r; break; }
-  }
-
-  console.log("\n=== 阶段 1 结论 ===");
-  if (lost) {
-    console.log(`⚠ 交易在**未重启**的情况下于 ${lost.at} 自行离开交易池（${lost.phase}）。`);
-    console.log("   → 原推断被证伪：不需要重启也会消失。真正的清理者是节点自身策略。");
-  } else {
-    console.log(`✅ 连续 ${MINUTES} 分钟无人干预，交易始终在池中且 receipt 恒为 null。`);
-    console.log("   → '不重启就一直在池里' 已被支持。现在才有资格做重启对照（阶段 2，需授权）。");
-  }
-  console.log(`实验参数：tx=${tx.hash} 账户=${addr} gasPrice=1 value=0 gas=505440 余额=0`);
-  console.log(`CSV: ${OUT}`);
-})().catch((e) => { console.error("实验异常：", e.message); process.exit(1); });
+  console.log(`\n采样完成 → ${file}`);
+  console.log("判读口诀：in_pool 恒 true 且 receipt 恒 null = 卡单实锤；");
+  console.log("重启后 in_pool 变 false 但几分钟后又变 true = 被 gossip 回填（要清必须重启全部持单节点）。");
+})();

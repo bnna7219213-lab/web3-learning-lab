@@ -1,31 +1,31 @@
 {
-  "measuredAt": "2026-11-12T20:19:16.418Z",
+  "measuredAt": "2026-11-12T21:53:37.856Z",
   "port": 8808,
   "chain": {
     "chainId": 19880601,
-    "head": 28638,
+    "head": 29771,
     "gasPrice": "0",
     "baseFeePerGas": "0",
     "zeroGas": true,
     "blockGasLimit": "9007199254740991",
     "finality": {
-      "targetBlock": 28637,
+      "targetBlock": 29770,
       "nodes": [
         {
           "node": "http://127.0.0.1:8551",
-          "hash": "0x95bd76e24a37e8cd7ae66cfcc8fc1279cfdc2d338892bf153572851ef60a2932"
+          "hash": "0x098d8691d1bad0f309a2695e16f6d54ac08a707eea61feb91495fbbfe7e811b9"
         },
         {
           "node": "http://127.0.0.1:8552",
-          "hash": "0x95bd76e24a37e8cd7ae66cfcc8fc1279cfdc2d338892bf153572851ef60a2932"
+          "hash": "0x098d8691d1bad0f309a2695e16f6d54ac08a707eea61feb91495fbbfe7e811b9"
         },
         {
           "node": "http://127.0.0.1:8553",
-          "hash": "0x95bd76e24a37e8cd7ae66cfcc8fc1279cfdc2d338892bf153572851ef60a2932"
+          "hash": "0x098d8691d1bad0f309a2695e16f6d54ac08a707eea61feb91495fbbfe7e811b9"
         }
       ],
       "consistent": true,
-      "hash": "0x95bd76e24a37e8cd7ae66cfcc8fc1279cfdc2d338892bf153572851ef60a2932"
+      "hash": "0x098d8691d1bad0f309a2695e16f6d54ac08a707eea61feb91495fbbfe7e811b9"
     }
   },
   "vault": {
@@ -41,7 +41,7 @@
     "upgradeInterfaceVersion": "5.0.0"
   },
   "events": {
-    "count": 10,
+    "count": 29,
     "names": [
       "Deployed",
       "Claimed",
@@ -52,17 +52,17 @@
   },
   "create2": {
     "factory": "0x707C0065297d53C03fb373a31287942A926DfD7c",
-    "deployCount": "1",
+    "deployCount": "5",
     "registeredChainId": 19880601,
     "lastDeployed": {
-      "blockNumber": 28217,
-      "txHash": "0x092468cc49c1b44f7ffce4e89872e812a9806387cfd1074f737bbea631d4319c"
+      "blockNumber": 29771,
+      "txHash": "0xecc96312bc6f63f6a3277c7004286f1b7766d69dd23a1c373e96460f75c5e81f"
     },
     "crossCheck": {
-      "salt": "0xf511385c67c14ae6b8f20fc2cd4337dadb9fd3ea3ab44f6d4c1096c04d15cd6d",
-      "addrFromEvent": "0x22C8146BD4aEe2644e440A9659a1c2616e32Ea3A",
-      "addrRegistered": "0x22C8146BD4aEe2644e440A9659a1c2616e32Ea3A",
-      "onchainCalc": "0x93e162e29cfF95A4b33e8529DfABE45EA6B3497a",
+      "salt": "0xc5ad6811dc47d3310fcb4dcc6324cc292bb0a7baadbcf6cc126b17192a8e5742",
+      "addrFromEvent": "0x000036fD2a602E83104f75BE3e96a1B34f4c2836",
+      "addrRegistered": "0x000036fD2a602E83104f75BE3e96a1B34f4c2836",
+      "onchainCalc": "0x1BF545063843F0087BEd7F35EBbdCe26A330E0dC",
       "registeredMatchesEvent": true
     }
   },

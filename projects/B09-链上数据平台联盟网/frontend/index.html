@@ -10,7 +10,8 @@
   <header>
     <h1>B09 · 链上数据看板</h1>
     <div class="sub">自建索引器 + BFF · 事件可查询 / 可对账 / 可出证</div>
-    <div id="health" class="health">连接中…</div>
+    <div id="health" class="health" role="status" aria-live="polite">连接中…</div>
+    <div id="source-summary" class="source-summary">事件源同步中…</div>
   </header>
 
   <section class="cards" id="cards"></section>
@@ -24,13 +25,15 @@
     <h2>事件查询（游标分页）</h2>
     <form id="filters" class="filters">
       <label>合同号 <input name="address" placeholder="0x…" /></label>
-      <label>事件 <input name="eventName" placeholder="Transfer / CredentialIssued / Payout / Upgraded…" /></label>
+      <label>业务域 <select name="domain" id="domain"><option value="">全部</option><option value="B05">B05 · LabToken</option><option value="B06">B06 · ApprovalFlow</option><option value="B07">B07 · 凭证 / 水龙头</option><option value="B08">B08 · 工程事件</option></select></label>
+      <label>事件 <select name="eventName" id="event-name"><option value="">全部</option><option>Transfer</option><option>Approval</option><option>Proposed</option><option>Reviewed</option><option>Revoked</option><option>Executed</option><option>CredentialIssued</option><option>Payout</option><option>Upgraded</option><option>Claimed</option><option>Deployed</option></select></label>
       <label>批次 <input name="batch" placeholder="batchId（凭证批次）/ salt（Create2）" /></label>
       <label>Token <input name="tokenId" /></label>
       <label>地址 <input name="addr" placeholder="from 或 to" /></label>
       <label>关键词 <input name="q" placeholder="txHash / 地址 / decoded" /></label>
       <button type="submit">筛选</button>
       <button type="reset" id="reset">清空</button>
+      <span id="filter-status" role="status" aria-live="polite"></span>
     </form>
     <div class="tablewrap">
       <table id="logs">
@@ -46,10 +49,20 @@
   </section>
 
   <section class="panel">
-    <h2>持有人（由转账事件重放派生）</h2>
+    <h2>NFT 持有人（ERC721 Transfer 重放；数量单位：枚）</h2>
     <div class="tablewrap">
       <table id="holders">
         <thead><tr><th>合同号</th><th>地址</th><th>持仓数</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>B05 LabToken 余额（ERC20 Transfer 重放；最小单位，非 NFT 数量）</h2>
+    <div class="tablewrap">
+      <table id="fungibles">
+        <thead><tr><th>合同号</th><th>地址</th><th>余额（wei 级最小单位）</th></tr></thead>
         <tbody></tbody>
       </table>
     </div>

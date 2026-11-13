@@ -36,11 +36,18 @@ data/
 .DS_Store
 Thumbs.db
 
+# 会话临时文件与本地下载的链运行时（可能包含验证者密钥，永不入库）
+.box-agent-scratch/
+.playwright-mcp/
+
 # 调试残留（对齐 lainchain 仓库净化经验：根目录只留源码与文档）
 _archive/
 tmp/
 scratch/
 *_debug.*
+
+# B04 本地实验账户密钥：默认文件名与自定义 *key*.json 都不入库
+projects/B04-HelloContract联盟网/docs/evidence/*key*.json
 
 # 本地链运行时的节点身份（含私钥 JWK），永不入库
 projects/*/bin/.network.json

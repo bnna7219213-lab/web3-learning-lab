@@ -1,0 +1,16 @@
+{
+  "name": "b04-hellocontract-consortium",
+  "version": "1.0.0",
+  "private": true,
+  "type": "commonjs",
+  "description": "B04 联盟链真实故障工具：卡单观测 + 同 nonce 替换处置（签名用 ethers，观测纯 RPC）",
+  "scripts": {
+    "observe": "node scripts/observe-stuck-tx.js",
+    "replace": "node scripts/verify-stuck-tx-replacement.js",
+    "serve": "node frontend/server.js",
+    "smoke": "node scripts/12-console-smoke.js"
+  },
+  "dependencies": {
+    "ethers": "^6.17.0"
+  }
+}

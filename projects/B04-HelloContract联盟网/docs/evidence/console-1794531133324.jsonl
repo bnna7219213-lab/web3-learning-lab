@@ -1,0 +1,1 @@
+{"at":"2026-11-13T00:52:13.324Z","kind":"make-stuck","account":"0x4e6C87a306015941Da38b1587766c0Daaa1480Ba","txHash":"0x2e15f5ded9ec0038fb9d94534109f06e316b8ab28607c7cb6184462af4599348","signals":{"url":"http://127.0.0.1:8551","head":30198,"tx_seen":true,"in_pool":true,"receipt":null,"nonce_latest":0,"nonce_pending":1,"pending_block_has_tx":false}}

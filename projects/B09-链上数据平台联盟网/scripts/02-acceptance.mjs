@@ -5,6 +5,7 @@
 //   D. 筛选（合同号/批次/持有人）< 1s
 //   E. 幂等 ｜ F. B 分支四条增量：多成员 / 零 gas / 终结性 / 权限负例留痕
 //   G. B08 × B09 联动：工程事件源（代理升级 / 空投 / CREATE2 落址）也进同一个索引
+//   H. B05/B06 业务源：历史重扫 + ERC20 余额对账 + 审批状态机 + 看板业务域可查
 import fs from "node:fs";
 import path from "node:path";
 import { ethers } from "ethers";
@@ -14,14 +15,9 @@ import { Scanner } from "../indexer/scanner.js";
 import { createServer } from "../indexer/server.js";
 import { watchContracts, watchSources } from "../indexer/config.js";
 
-const DB = path.join(ROOT, "data", "acceptance.db");
-// REUSE_DB=1 时复用已同步的库（全量同步 ~7 分钟，迭代断言时用）；默认每次清库重来
-if (!process.env.REUSE_DB) {
-  for (const suffix of ["", "-wal", "-shm"]) {
-    const f = DB + suffix;
-    if (fs.existsSync(f)) fs.unlinkSync(f);
-  }
-}
+// 默认每次新建独立验收库：保留历史证据，也不受旧进程持有文件的干扰。
+// DB_PATH 可显式指定路径；REUSE_DB=1 只用于显式指定库的增量调试。
+const DB = process.env.DB_PATH || path.join(ROOT, "data", `acceptance-${Date.now()}.db`);
 
 const dep = loadDeployment();
 const provider = new ethers.JsonRpcProvider(RPC, CHAIN_ID, { staticNetwork: true });
@@ -34,11 +30,14 @@ const snapshotCounts = (store) => ({
 });
 
 hr("0. full sync (consortium chain, from block 0)");
+console.log(`  验收数据库：${DB}`);
 const store = openDb(DB);
+const sources = watchSources();
 const scan = new Scanner({
   store,
   rpc: RPC,
-  contracts: watchContracts(), // B07 业务源 + B08 工程源（联动）
+  sources,
+  contracts: watchContracts(),
   confirmations: 0,
   logChunk: 500,
   startBlock: 0,
@@ -78,7 +77,7 @@ console.log("  样例:", oneBlocked ? oneBlocked.decoded.slice(0, 120) : "-");
 
 // ============ B. 分页稳定 ============
 hr("B. cursor pagination stability");
-const PORT = 8812;
+const PORT = Number(process.env.ACCEPTANCE_PORT || 8812);
 const server = createServer({ store, scanner: scan, apiKey: "acceptance-key", port: PORT });
 const api = async (p) => {
   const t = Date.now();
@@ -169,8 +168,6 @@ const readJsonFile = (f) => (fs.existsSync(f) ? JSON.parse(fs.readFileSync(f, "u
 const B08_DIR = path.resolve(ROOT, "..", "B08-合约工程化联盟网");
 const b8dep = readJsonFile(path.join(B08_DIR, "deployments", "latest.json"));
 const drill = readJsonFile(path.join(B08_DIR, "deployments", "upgrade-drill.json"));
-const sources = watchSources();
-
 ok(
   !!b8dep && sources.some((s) => s.address.toLowerCase() === String(b8dep.vaultProxy).toLowerCase()),
   `事件源清单含 B08 合约（${sources.length} 个源：${sources.map((s) => s.label).join(" / ")}）`
@@ -225,6 +222,120 @@ ok(
   claimN + deployedN > 0,
   `B08 空投/CREATE2 事件也进索引（Claimed=${claimN} 条，Deployed=${deployedN} 条）`
 );
+
+// ============ H. B05 / B06 业务事件源也进同一个索引（联盟链全景联动）============
+hr("H. B05 / B06 business event sources indexed (全联盟链路联动)");
+const B05_DIR = path.resolve(ROOT, "..", "B05-ERC20代币联盟网");
+const B06_DIR = path.resolve(ROOT, "..", "B06-投票DApp联盟网");
+// B05 的 latest.json 指的是 anvil(31337) 那份，联盟链必须读链号目录
+const b5dep = readJsonFile(path.join(B05_DIR, "deployments", String(CHAIN_ID), "LabToken.json"));
+const b6dep = readJsonFile(path.join(B06_DIR, "deployments", "latest.json"));
+ok(
+  !!b5dep && sources.some((s) => s.address.toLowerCase() === String(b5dep.address).toLowerCase()),
+  `事件源清单含 B05 LabToken（${b5dep?.address || "缺失"}）`
+);
+ok(
+  !!b6dep && sources.some((s) => s.address.toLowerCase() === String(b6dep.approvalFlow).toLowerCase()),
+  `事件源清单含 B06 ApprovalFlow（${b6dep?.approvalFlow || "缺失"}）`
+);
+
+// —— 先在 B06 的持久实例上造出完整状态机的事件（提案 → 复核 → 撤销 / 提案 → 复核 → 执行）——
+//    索引器必须能吃到这些事件，才说明「B06 的业务流真的进了平台」。
+const b6Abi = readJsonFile(path.join(B06_DIR, "abi", "ApprovalFlow.json"));
+const cfgEnv = cfg();
+const b6provider = new ethers.JsonRpcProvider(RPC, CHAIN_ID, { staticNetwork: true });
+const wA = new ethers.Wallet(cfgEnv.MEMBER_A_PRIVATE_KEY, b6provider);
+const wB = new ethers.Wallet(cfgEnv.MEMBER_B_PRIVATE_KEY, b6provider);
+const wAdmin = new ethers.Wallet(cfgEnv.ISSUER_PRIVATE_KEY, b6provider);
+const flow = new ethers.Contract(b6dep.approvalFlow, b6Abi, wA);
+const GAS0 = { gasLimit: 300000n, gasPrice: 0n, type: 0 };
+const title = "B09 联动：提案";
+const p1 = await (await flow.propose(wA.address, 0n, "0x", title, GAS0)).wait();
+const id1 = Number(await flow.proposalCount()) - 1;
+// 另一成员复核（双人复核：复核人 ≠ 提案人）
+await (await flow.connect(wB).approve(id1, GAS0)).wait();
+// 第二个提案：复核后在生效延迟内撤销 → 留下 Revoked 痕迹
+const p2 = await (await flow.propose(wA.address, 0n, "0x", title + "（撤销）", GAS0)).wait();
+const id2 = Number(await flow.proposalCount()) - 1;
+await (await flow.connect(wB).approve(id2, GAS0)).wait();
+await (await flow.connect(wA).revoke(id2, GAS0)).wait();
+// 第三个提案：等生效延迟结束 → 执行 → 留下 Executed 痕迹
+const p3 = await (await flow.propose(wA.address, 0n, "0x", title + "（执行）", GAS0)).wait();
+const id3 = Number(await flow.proposalCount()) - 1;
+await (await flow.connect(wB).approve(id3, GAS0)).wait();
+const delay = Number(b6dep.delaySeconds || 60);
+console.log(`  B06 状态机已造：提案 #${id1}(复核) / #${id2}(撤销) / #${id3}(复核)，等待生效延迟 ${delay}s…`);
+await new Promise((r) => setTimeout(r, (delay + 2) * 1000));
+await (await flow.connect(wAdmin).execute(id3, GAS0)).wait();
+// 索引器追上链头（这批新事件是刚才才产生的）
+const rH = await scan.syncOnce();
+console.log(`  索引追上链头 #${rH.head}`);
+
+// B05：ERC20 记账单位。Transfer/Approval 与凭证同名同参（topic0 只看签名）→ 无需新增片段即可解码
+const b5Addr = String(b5dep?.address || "").toLowerCase();
+const b5Transfer = count(store, `SELECT COUNT(*) c FROM logs WHERE eventName='Transfer' AND address='${b5Addr}'`);
+ok(b5Transfer > 0, `B05 记账单位的 ERC20 Transfer 进索引（${b5Transfer} 条）`);
+const b5Chain = await chainLogCount({
+  address: b5dep.address,
+  topics: [ethers.id("Transfer(address,address,uint256)")],
+});
+ok(b5Transfer === b5Chain, `B05 Transfer 事件数与链上 eth_getLogs 一致（${b5Transfer} == ${b5Chain}）`);
+const b5Token = new ethers.Contract(b5dep.address, ["function balanceOf(address) view returns (uint256)"], provider);
+const b5Balances = store.q("SELECT address, balance FROM fungibleBalances WHERE contract = ?").all(b5Addr);
+const b5BalanceChecks = [];
+for (const row of b5Balances) {
+  b5BalanceChecks.push(BigInt(row.balance) === BigInt(await b5Token.balanceOf(row.address)));
+}
+ok(b5Balances.length > 0 && b5BalanceChecks.every(Boolean), `B05 全部派生余额与链上 balanceOf 一致（${b5Balances.length} 个账户）`);
+ok(count(store, "SELECT COUNT(*) c FROM assets WHERE contract = ?", b5Addr) === 0, "B05 ERC20 没有被误计为 NFT 资产");
+
+// B06：审批流四事件（提案 / 复核 / 撤销 / 执行）
+const b6Addr = String(b6dep?.approvalFlow || "").toLowerCase();
+const b6Counts = {};
+for (const ev of ["Proposed", "Reviewed", "Revoked", "Executed"]) {
+  b6Counts[ev] = count(store, `SELECT COUNT(*) c FROM logs WHERE eventName='${ev}' AND address='${b6Addr}'`);
+}
+ok(b6Counts.Proposed >= 3, `B06 审批流的 Proposed 进索引（${b6Counts.Proposed} 条）`);
+ok(b6Counts.Reviewed >= 3, `B06 复核事件 Reviewed 进索引（${b6Counts.Reviewed} 条，含通过与驳回）`);
+ok(b6Counts.Revoked >= 1, `B06 撤销事件 Revoked 进索引（${b6Counts.Revoked} 条：撤销窗口是可查的痕迹）`);
+ok(b6Counts.Executed >= 1, `B06 执行事件 Executed 进索引（${b6Counts.Executed} 条）`);
+const b6Chain = await chainLogCount({
+  address: b6dep.approvalFlow,
+  topics: [ethers.id("Proposed(uint256,address,string)")],
+});
+ok(b6Counts.Proposed === b6Chain, `B06 Proposed 事件数与链上 eth_getLogs 一致（${b6Counts.Proposed} == ${b6Chain}）`);
+
+// 跨项目对账：索引里 Proposed 事件的地址必须就是 B06 部署记录里的那个合约
+const proposedAddr = store
+  .q(`SELECT address FROM logs WHERE eventName='Proposed' AND address='${b6Addr}' LIMIT 1`)
+  .get();
+ok(
+  !!proposedAddr && proposedAddr.address.toLowerCase() === b6Addr,
+  `跨项目对账：B06 部署记录的合约地址与索引事件地址一致（${b6Addr.slice(0, 10)}…）`
+);
+
+// 看板可查（同一个筛选维度里同时看得到 B05/B06/B07/B08 四类事件）
+const f5 = await api(`/api/logs?eventName=Proposed&limit=20`);
+ok(f5.status === 200 && f5.j.items.length >= 1, `看板按事件名可查审批提案（${f5.ms}ms，${f5.j.items.length} 条）`);
+const f6 = await api(`/api/logs?eventName=Transfer&address=${b5dep.address}&limit=50`);
+const b5OnBoard = (f6.j.items || []).filter((x) => String(x.address).toLowerCase() === b5Addr);
+ok(b5OnBoard.length >= 1, `看板按合约地址能筛出 B05 记账单位的转账（${b5OnBoard.length} 条）`);
+const sourceApi = await api("/api/sources");
+const sourceDomains = new Set((sourceApi.j.data || []).map((s) => s.domain));
+ok(["B05", "B06", "B07", "B08"].every((d) => sourceDomains.has(d)), `看板业务域 API 返回 B05–B08（${[...sourceDomains].join("/")}）`);
+
+// ============ I. 事件源变更：从现有游标回扫，历史事实与派生状态都不丢 ============
+hr("I. source fingerprint -> full historical rescan");
+const beforeI = snapshotCounts(store);
+const scanI = new Scanner({ store, rpc: RPC, sources: sources.filter((s) => s.domain !== "B05"), confirmations: 0, logChunk: 500, startBlock: 0, chainKey: `chain:${CHAIN_ID}` });
+const rI1 = await scanI.syncOnce();
+ok(!!rI1.sourcesChanged, "移除 B05 后识别事件源指纹变化");
+ok(count(store, "SELECT COUNT(*) c FROM logs WHERE address = ?", b5Addr) === 0, "移除事件源后清理其旧日志，不留下口径不一致的派生数据");
+const rI2 = await scan.syncOnce();
+ok(!!rI2.sourcesChanged && rI2.cursor.lastBlock >= rI2.head, "重新接入 B05 后自动回扫并追上链头");
+ok(count(store, "SELECT COUNT(*) c FROM logs WHERE address = ? AND eventName = 'Transfer'", b5Addr) === b5Chain, "重接入后 B05 的历史 Transfer 被补回（不是只收新事件）");
+const afterI = snapshotCounts(store);
+ok(afterI.blocks >= beforeI.blocks && afterI.logs >= beforeI.logs, `全量重扫保留其它事件源（logs ${beforeI.logs} → ${afterI.logs}）`);
 
 server.close();
 summary("02 acceptance (B09)");

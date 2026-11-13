@@ -9,7 +9,8 @@
     "watch": "node indexer/run.js watch",
     "serve": "node indexer/run.js serve",
     "gen-events": "node scripts/01-gen-events.mjs",
-    "acceptance": "node scripts/02-acceptance.mjs"
+    "acceptance": "node scripts/02-acceptance.mjs",
+    "test": "node --test test/*.test.mjs"
   },
   "dependencies": {
     "ethers": "^6.17.0"

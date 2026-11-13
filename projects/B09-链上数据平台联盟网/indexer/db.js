@@ -38,6 +38,17 @@ export class Store {
     ).run(chainKey, lastBlock, lastHash ?? null, now());
   }
 
+  // ---- meta：事件源清单指纹等运行期元信息 ----
+  getMeta(key) {
+    const row = this.q("SELECT value FROM meta WHERE key = ?").get(key);
+    return row ? row.value : null;
+  }
+  setMeta(key, value) {
+    this.q(
+      "INSERT INTO meta(key, value) VALUES(?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value"
+    ).run(key, String(value));
+  }
+
   // ---- 写入（全部幂等）----
   insertBlock(b) {
     this.q(
@@ -65,6 +76,10 @@ export class Store {
          tokenId = excluded.tokenId, batch = excluded.batch`
     ).run(l.blockNumber, l.blockHash, l.txHash, l.logIndex, l.address, l.topic0 ?? null, l.topics, l.data,
       l.eventName ?? null, l.decoded ?? null, l.fromAddr ?? null, l.toAddr ?? null, l.tokenId ?? null, l.batch ?? null);
+    if (l.transferKind) {
+      this.q("INSERT OR REPLACE INTO transferKinds(blockHash, logIndex, kind) VALUES(?, ?, ?)")
+        .run(l.blockHash, l.logIndex, l.transferKind);
+    }
   }
 
   getBlock(number) {
@@ -76,6 +91,7 @@ export class Store {
     this.db.exec("BEGIN");
     try {
       this.q("DELETE FROM logs WHERE blockNumber > ?").run(number);
+      this.q("DELETE FROM transferKinds WHERE NOT EXISTS (SELECT 1 FROM logs l WHERE l.blockHash = transferKinds.blockHash AND l.logIndex = transferKinds.logIndex)").run();
       this.q("DELETE FROM txs WHERE blockNumber > ?").run(number);
       this.q("DELETE FROM blocks WHERE number > ?").run(number);
       const b = this.getBlock(number);
@@ -89,34 +105,68 @@ export class Store {
     return number;
   }
 
-  // ---- 派生状态重放：assets/holders 全部由 logs 重算（回滚后必调）----
+  /** 事件源清单改变：清理退出源的日志，所有派生表在下一次重扫末尾重建。 */
+  pruneSources(contracts) {
+    const allowed = new Set(contracts.map((c) => String(c).toLowerCase()));
+    const stale = this.q("SELECT DISTINCT address FROM logs").all().filter((r) => !allowed.has(r.address.toLowerCase()));
+    this.db.exec("BEGIN");
+    try {
+      for (const r of stale) {
+        this.q("DELETE FROM transferKinds WHERE (blockHash, logIndex) IN (SELECT blockHash, logIndex FROM logs WHERE address = ?)").run(r.address);
+        this.q("DELETE FROM logs WHERE address = ?").run(r.address);
+      }
+      this.db.exec("DELETE FROM assets; DELETE FROM holders; DELETE FROM fungibleBalances;");
+      this.db.exec("COMMIT");
+    } catch (e) {
+      this.db.exec("ROLLBACK");
+      throw e;
+    }
+    return stale.length;
+  }
+
+  // ---- 派生状态重放：NFT 与 ERC20 分开记账，全部使用整数 / BigInt ----
   rebuildAssets() {
     this.db.exec("BEGIN");
     try {
-      this.db.exec("DELETE FROM assets; DELETE FROM holders;");
+      this.db.exec("DELETE FROM assets; DELETE FROM holders; DELETE FROM fungibleBalances;");
       const rows = this.q(
-        `SELECT address, eventName, decoded, tokenId, fromAddr, toAddr FROM logs
-         WHERE eventName IN ('Transfer', 'TransferSingle') ORDER BY blockNumber, logIndex`
+        `SELECT l.address, l.eventName, l.decoded, l.tokenId, l.fromAddr, l.toAddr, k.kind
+         FROM logs l LEFT JOIN transferKinds k
+           ON k.blockHash = l.blockHash AND k.logIndex = l.logIndex
+         WHERE l.eventName IN ('Transfer', 'TransferSingle') ORDER BY l.blockNumber, l.logIndex`
       ).all();
-      const holders = new Map(); // contract|addr -> count
-      const bump = (contract, addr, delta) => {
+      const holders = new Map();
+      const fungibles = new Map();
+      const bump = (map, contract, addr, delta, initial) => {
         const k = contract.toLowerCase() + "|" + addr.toLowerCase();
-        const v = (holders.get(k) ?? 0) + delta;
-        holders.set(k, v);
+        map.set(k, (map.get(k) ?? initial) + delta);
       };
       for (const r of rows) {
         const contract = r.address;
         const zero = "0x0000000000000000000000000000000000000000";
-        if (r.eventName === "Transfer") {
+        if (r.eventName === "Transfer" && r.kind === "erc20") {
+          const d = r.decoded ? JSON.parse(r.decoded) : {};
+          const value = BigInt(d.value ?? 0);
+          const from = (r.fromAddr ?? zero).toLowerCase();
+          const to = (r.toAddr ?? zero).toLowerCase();
+          if (from !== zero) bump(fungibles, contract, from, -value, 0n);
+          if (to !== zero) bump(fungibles, contract, to, value, 0n);
+          if ((fungibles.get(contract.toLowerCase() + "|" + from) ?? 0n) < 0n ||
+              (fungibles.get(contract.toLowerCase() + "|" + to) ?? 0n) < 0n) {
+            throw new Error(`ERC20 事件重放出现负余额：${contract} ${from}/${to}`);
+          }
+          continue;
+        }
+        if (r.eventName === "Transfer" && r.kind === "erc721") {
           const from = r.fromAddr ?? zero;
           const to = r.toAddr ?? zero;
-          const tokenId = r.tokenId ?? "";
-          if (from !== zero) bump(contract, from, -1);
+          const tokenId = r.tokenId;
+          if (tokenId == null) throw new Error(`ERC721 Transfer 缺 tokenId：${contract}`);
+          if (from !== zero) bump(holders, contract, from, -1, 0);
           if (to === zero) {
-            // burn：资产销毁，holder 与 assets 同步减，保持 Σholders == #assets 的不变式
             this.q("DELETE FROM assets WHERE contract = ? AND tokenId = ?").run(contract, tokenId);
           } else {
-            bump(contract, to, +1);
+            bump(holders, contract, to, +1, 0);
             this.q(
               `INSERT INTO assets(contract, tokenId, standard, owner, uri, updatedAt) VALUES(?, ?, 'erc721', ?, NULL, ?)
                ON CONFLICT(contract, tokenId) DO UPDATE SET owner = excluded.owner, updatedAt = excluded.updatedAt`
@@ -124,18 +174,23 @@ export class Store {
           }
         } else if (r.eventName === "TransferSingle") {
           const d = r.decoded ? JSON.parse(r.decoded) : {};
-          const from = r.fromAddr ?? zero;
-          const to = r.toAddr ?? zero;
           const qty = Number(d.value ?? 1);
-          if (from !== zero) bump(contract, from, -qty);
-          if (to !== zero) bump(contract, to, +qty);
+          if (!Number.isSafeInteger(qty) || qty < 0) throw new Error(`TransferSingle 数量超出安全整数：${d.value}`);
+          if (r.fromAddr && r.fromAddr !== zero) bump(holders, contract, r.fromAddr, -qty, 0);
+          if (r.toAddr && r.toAddr !== zero) bump(holders, contract, r.toAddr, qty, 0);
         }
       }
       for (const [k, v] of holders) {
-        if (v <= 0) continue;
+        if (v < 0) throw new Error(`NFT 事件重放出现负持仓：${k}`);
+        if (v === 0) continue;
         const [contract, address] = k.split("|");
-        this.q("INSERT INTO holders(contract, address, tokens) VALUES(?, ?, ?) ON CONFLICT(contract, address) DO UPDATE SET tokens = excluded.tokens")
-          .run(contract, address, v);
+        this.q("INSERT INTO holders(contract, address, tokens) VALUES(?, ?, ?)").run(contract, address, v);
+      }
+      for (const [k, v] of fungibles) {
+        if (v <= 0n) continue;
+        const [contract, address] = k.split("|");
+        this.q("INSERT INTO fungibleBalances(contract, address, balance) VALUES(?, ?, ?)")
+          .run(contract, address, v.toString());
       }
       this.db.exec("COMMIT");
     } catch (e) {
@@ -153,6 +208,7 @@ export class Store {
       logs: one("SELECT COUNT(*) c FROM logs").c,
       assets: one("SELECT COUNT(*) c FROM assets").c,
       holders: one("SELECT COUNT(*) c FROM holders").c,
+      fungibleHolders: one("SELECT COUNT(*) c FROM fungibleBalances").c,
       events: this.q("SELECT eventName, COUNT(*) c FROM logs GROUP BY eventName ORDER BY c DESC").all(),
       lastBlock: this.getCursor()?.lastBlock ?? null,
     };

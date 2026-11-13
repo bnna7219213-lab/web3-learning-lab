@@ -1,5 +1,5 @@
 {
-  "measuredAt": "2026-11-12T19:43:08.656Z",
+  "measuredAt": "2026-11-12T21:53:32.088Z",
   "eip170Limit": 24576,
   "chainConfig": "contractSizeLimit=2147483647, pertxgaslimit=0（EIP-7825 上限解除）",
   "perTxScriptCap": "8000000",
@@ -9,14 +9,14 @@
       "size": 24000,
       "gasUsed": "4954884",
       "codeLen": 24000,
-      "address": "0xDF88d2a1bD8f28840bCb05e27BF86f2ff03C6195"
+      "address": "0xF20Cb20842fFcbe4dB5981f824DF8B4731C3a5Dc"
     },
     {
       "label": "B 30,000B（> EIP-170）",
       "size": 30000,
       "gasUsed": "6180632",
       "codeLen": 30000,
-      "address": "0x057Fbc79fe3309779C2b988F449B51a214Db3006"
+      "address": "0xA9164C836F88E16839a1b4AF38Dfb49F8670185f"
     }
   ],
   "conclusion": "批量业务上线门槛不是 EIP-170，而是单笔 gas 上限：8M 脚本上限 ≈ 39.9KB 合约；更大合约需提高 PER_TX_GAS_LIMIT（链本身不设限）"

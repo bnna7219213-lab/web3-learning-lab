@@ -17,9 +17,10 @@
 | 合约工程 | `projects/P04`–`P08`、`P20`–`P25` | Foundry 编写 / 测试 / 部署 / 升级 / 审计（P04/P05/P06/P07/P08 已完成实测；B08 联盟网版含多成员升级演练与大合约边界实测） |
 | **真实联盟网** | `shared/consortium-network` | Besu + QBFT 四验证者本地组网、创世生成、加成员、冒烟测试 |
 | **自建钱包 + 联盟链浏览器** | `projects/B03` | 没有 MetaMask、没有 Etherscan、没有公链 faucet 的情况下，把「建账户 → 领币 → 发交易 → 逐字段自查」走通 |
-| 联盟链上的真实故障 | `projects/B04` | 卡池交易、EIP-1559 费用下限、PUSH0 与 evmVersion、同 nonce 替换解锁 |
+| 联盟链上的真实故障 | `projects/B04` | 卡池交易、EIP-1559 费用下限、PUSH0 与 evmVersion、同 nonce 替换解锁；含**卡单观测与处置台**（36/36 冒烟） |
 | **联盟内权益凭证** | `projects/B07` | NFT 市场的联盟版：成员白名单转让（禁二级）、元数据只存哈希（内网 OSS + P01 出证结构）、4907 租期、到期自动回收、核销与审计留痕；**与 B03 水龙头衔接——一次领取同时得到余额与凭证**；零 gas + 4 验证者 QBFT 实测 |
-| **合约工程化（联盟版）** | `projects/B08` | Gas 双指标（区块容量+出块延迟）、多成员升级演练（签名窗口+回滚）、Merkle×P01 四方向互验、>24KB 大合约边界实测；40 条 forge 单测 + 8 个验收脚本全绿 |
+| **合约工程化（联盟版）** | `projects/B08` | Gas 双指标（区块容量+出块延迟）、多成员升级演练（签名窗口+回滚）、Merkle×P01 四方向互验、>24KB 大合约边界实测、Create2×chainId 登记双算；40 条 forge 单测 + **10 个验收脚本**全绿，含**零构建运维看板**（`frontend/`） |
+| **链上数据平台（联盟版）** | `projects/B09` | 自建索引器 + BFF + 业务域看板：**B05 记账单位 + B06 审批流 + B07 凭证/水龙头 + B08 工程事件**同索引；ERC20/NFT 分离派生、链上余额对账、事件源变化全量重扫；全量验收 48/48 |
 | 可独立复核的出证 | `shared/evidence` | v2 索引化 Merkle 树 + P-256 签名验证，12 项属性测试 + 9 项篡改拒绝 |
 
 ## 2. 快速开始（零依赖部分，Windows / Git Bash）
@@ -90,6 +91,29 @@ cd projects/B03-链上交互实战联盟网
 RPC=http://127.0.0.1:8551 node scripts/verify-transfer-both-sides.js
 ```
 
+### 3.1 B08 运维看板 + B09 数据看板（联盟网上层）
+
+```bash
+# B08：合约工程化验收（10 项）+ 零构建运维看板
+cd projects/B08-合约工程化联盟网
+npm install && node scripts/run-all.js    # ≈6 分钟（04 步要等 5 分钟复查）
+npm run serve                              # 运维看板 → http://127.0.0.1:8808
+
+# B09：B05–B08 七合约统一索引 + 业务域看板
+cd ../B09-链上数据平台联盟网
+npm install && npm test && npm run acceptance   # 单元 3 项 + 全量 A–I 48 项
+npm run serve                                    # 数据看板 → http://127.0.0.1:8802
+```
+
+> 两个看板都**不能直连 8551**：联盟网 Besu 的 CORS 白名单为空，浏览器跨源会被拒。
+> B08 用 `frontend/server.js` 的同源 `/rpc` 反代，B09 用自己的 BFF，两者都不需要额外配置。
+>
+> **B08 与 B09 的关系**：并列的两条线，共同上游是 B07（B09 的事件源与成员私钥）。
+> 联动点是"B08 的工程动作在链上留下的痕迹也进 B09 的索引"——
+> ERC-1967 的 `Upgraded` 事件被索引后，"代理的实现版本史"从演练日志变成了可查询、可对账的数据。
+> 完整依赖论证见 `shared/consortium-network/docs/05-B08-B09依赖关系与联动.md`；
+> B03–B09 全部页面与联动证据见 `shared/consortium-network/docs/06-全联盟链路全景.md`。
+
 ## 4. 为什么「自建钱包 + 自建浏览器」值得单独学
 
 公链教程默认你有 MetaMask、公共 faucet 和 Etherscan。联盟链环境三者都没有：
@@ -138,11 +162,11 @@ web3_learning_lab/
 ├── docs/
 │   ├── S1-区块链基础/ … S7-毕业项目/     # 每阶段原理文与复盘（S1/S2 已有实测文档索引）
 ├── projects/
-│   ├── P01…P26/                          # 学习线（A 线）：P01–P06 已完成实测
-│   ├── B03…B08/                          # 联盟网分支（B 线）：自建钱包、浏览器、出证
+│   ├── P01…P26/                          # 学习线（A 线）：P01–P09 已完成实测
+│   ├── B03…B09/                          # 联盟网分支（B 线）：自建钱包、浏览器、出证、工程化、数据平台
 │   └── G1…G6-毕业项目/
 ├── shared/
-│   ├── consortium-network/               # Besu QBFT 组网脚本、创世模板、差异矩阵
+│   ├── consortium-network/               # Besu QBFT 组网脚本、创世模板、差异矩阵、依赖关系
 │   ├── evidence/                         # 可独立复核的证据包（Merkle v2 + P-256）
 │   └── contracts-lib · frontend-lib · indexer-templates · scripts
 ├── templates/                            # 项目启动模板

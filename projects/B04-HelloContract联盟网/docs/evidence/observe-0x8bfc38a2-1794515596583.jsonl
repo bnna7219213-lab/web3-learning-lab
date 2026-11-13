@@ -1,0 +1,12 @@
+{"at":"2026-11-12T20:33:16.584Z","url":"http://127.0.0.1:8551","head":28807,"tx_seen":true,"in_pool":true,"receipt":null,"nonce_latest":0,"nonce_pending":1,"pending_block_has_tx":false}
+{"at":"2026-11-12T20:33:16.584Z","url":"http://127.0.0.1:8552","head":28807,"tx_seen":true,"in_pool":true,"receipt":null,"nonce_latest":0,"nonce_pending":1,"pending_block_has_tx":false}
+{"at":"2026-11-12T20:33:16.584Z","url":"http://127.0.0.1:8553","head":28807,"tx_seen":true,"in_pool":true,"receipt":null,"nonce_latest":0,"nonce_pending":1,"pending_block_has_tx":false}
+{"at":"2026-11-12T20:33:46.888Z","url":"http://127.0.0.1:8551","head":28813,"tx_seen":true,"in_pool":true,"receipt":null,"nonce_latest":0,"nonce_pending":1,"pending_block_has_tx":false}
+{"at":"2026-11-12T20:33:46.888Z","url":"http://127.0.0.1:8552","head":28813,"tx_seen":true,"in_pool":true,"receipt":null,"nonce_latest":0,"nonce_pending":1,"pending_block_has_tx":false}
+{"at":"2026-11-12T20:33:46.888Z","url":"http://127.0.0.1:8553","head":28813,"tx_seen":true,"in_pool":true,"receipt":null,"nonce_latest":0,"nonce_pending":1,"pending_block_has_tx":false}
+{"at":"2026-11-12T20:34:17.117Z","url":"http://127.0.0.1:8551","head":28819,"tx_seen":true,"in_pool":true,"receipt":null,"nonce_latest":0,"nonce_pending":1,"pending_block_has_tx":false}
+{"at":"2026-11-12T20:34:17.117Z","url":"http://127.0.0.1:8552","head":28819,"tx_seen":true,"in_pool":true,"receipt":null,"nonce_latest":0,"nonce_pending":1,"pending_block_has_tx":false}
+{"at":"2026-11-12T20:34:17.117Z","url":"http://127.0.0.1:8553","head":28819,"tx_seen":true,"in_pool":true,"receipt":null,"nonce_latest":0,"nonce_pending":1,"pending_block_has_tx":false}
+{"at":"2026-11-12T20:34:47.364Z","url":"http://127.0.0.1:8551","head":28825,"tx_seen":true,"in_pool":true,"receipt":null,"nonce_latest":0,"nonce_pending":1,"pending_block_has_tx":false}
+{"at":"2026-11-12T20:34:47.364Z","url":"http://127.0.0.1:8552","head":28825,"tx_seen":true,"in_pool":true,"receipt":null,"nonce_latest":0,"nonce_pending":1,"pending_block_has_tx":false}
+{"at":"2026-11-12T20:34:47.364Z","url":"http://127.0.0.1:8553","head":28825,"tx_seen":true,"in_pool":true,"receipt":null,"nonce_latest":0,"nonce_pending":1,"pending_block_has_tx":false}

@@ -1,0 +1,19 @@
+{
+  "project": "B06",
+  "chainId": 19880601,
+  "approvalFlow": "0x6fB22990Dbe827E980541c4C2bdd3d6816a1ee9d",
+  "delaySeconds": 15,
+  "admin": "0x240c383184AAf85fa4F12B6846Ec5c8c5f48EB8B",
+  "proposers": [
+    "0x9de4De69C1b85eC62cd3c65A9DdbAbF6F0B18585",
+    "0xB4e210662463C6747Fd235106995C4f9C50b1728"
+  ],
+  "reviewers": [
+    "0x9de4De69C1b85eC62cd3c65A9DdbAbF6F0B18585",
+    "0xB4e210662463C6747Fd235106995C4f9C50b1728"
+  ],
+  "executors": [
+    "0x240c383184AAf85fa4F12B6846Ec5c8c5f48EB8B"
+  ],
+  "deployedAt": "2026-11-12T21:10:02.525Z"
+}

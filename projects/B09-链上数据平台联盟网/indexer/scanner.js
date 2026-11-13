@@ -23,10 +23,11 @@ const qty = (n) => ethers.toQuantity(n);
 export class Scanner {
   // confirmations 默认 0：QBFT 单块终结，等 N 块没有意义（要的是「跨节点块哈希一致」）。
   //   —— 这是 B09 与 P09 的关键差异之一，直接 new Scanner() 复用时不要沿用 P09 的 2。
-  constructor({ store, rpc, contracts = [], confirmations = 0, logChunk = 2000, startBlock = 0, chainKey = "" }) {
+  constructor({ store, rpc, contracts = [], sources = null, confirmations = 0, logChunk = 2000, startBlock = 0, chainKey = "" }) {
     this.store = store;
     this.rpc = rpc;
-    this.contracts = contracts;
+    this.sources = sources;
+    this.contracts = sources ? sources.map((s) => s.address) : contracts;
     this.confirmations = confirmations;
     this.logChunk = logChunk;
     this.startBlock = startBlock;
@@ -38,6 +39,16 @@ export class Scanner {
   }
 
   async syncOnce() {
+    // 事件源清单变了（新增/移除合约）→ 游标退回起点，全量重扫。
+    //   不这么做，新合约的**历史**事件永远扫不到（游标已经过去了）——
+    //   实测踩过：接入 B05 的 LabToken 时，它的 Transfer 事件在 block 457，
+    //   而游标早已到 29000+，增量同步永远补不上这条链上事实。
+    const sourcesChanged = this.ensureSourcesFingerprint();
+    if (sourcesChanged) {
+      // 移除的源不是「暂停采集」而是退出当前索引口径：旧日志也要清掉，
+      // 否则派生状态会继续包含一个配置里已不存在的事件源。
+      this.store.pruneSources(this.contracts);
+    }
     // 聚合整个调用周期内的重组信息：即使重试后扫描成功，也要让调用方知道发生过回滚
     let reorgDuring = null;
     for (let attempt = 0; attempt < 5; attempt++) {
@@ -46,9 +57,29 @@ export class Scanner {
         reorgDuring = r;
         continue;
       }
-      return { ...r, reorgDuring };
+      return { ...r, reorgDuring, sourcesChanged };
     }
     throw new Error("重组检测连续触发 5 次仍未稳定，请人工核对链状态");
+  }
+
+  /** 事件源清单指纹：变了就把游标退回起点（幂等重扫，历史事件补齐） */
+  ensureSourcesFingerprint() {
+    const fp = this.contracts.map((c) => String(c).toLowerCase()).sort().join(",");
+    const chainKey = `chain:${this.chainKey}`;
+    const prev = this.store.getMeta("sourcesFingerprint");
+    const prevChainKey = this.store.getMeta("sourcesChainKey");
+    if (prev === fp && prevChainKey === chainKey) return null;
+    this.store.setMeta("sourcesFingerprint", fp);
+    this.store.setMeta("sourcesChainKey", chainKey);
+    const cur = this.store.getCursor();
+    if (!cur) return null; // 首次建库：本来就要从 startBlock 扫
+    if (cur.lastBlock < this.startBlock) return null;
+    this.store.setCursor(this.startBlock - 1, null, this.chainKey);
+    console.log(
+      `[scanner] 事件源清单变化（${prev ? prev.split(",").length : 0} → ${this.contracts.length} 个源）` +
+        ` → 游标退回 ${this.startBlock - 1}，全量重扫`
+    );
+    return { previous: prev, current: fp, rolledBackTo: this.startBlock - 1 };
   }
 
   async _attempt() {
@@ -161,6 +192,7 @@ export class Scanner {
         toAddr: d.toAddr ? d.toAddr.toLowerCase() : null,
         tokenId: d.tokenId,
         batch: d.batch,
+        transferKind: d.transferKind,
       });
       logsCount++;
       if (d.eventName === "Transfer" || d.eventName === "TransferSingle") touchedTransfers = true;

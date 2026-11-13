@@ -1,5 +1,5 @@
 {
-  "measuredAt": "2026-11-12T19:30:19.256Z",
+  "measuredAt": "2026-11-12T21:52:52.127Z",
   "chainId": 19880601,
   "blockGasLimit": "9007199254740991",
   "perTxScriptCap": "8000000",
@@ -43,13 +43,13 @@
   "batches": [
     {
       "label": "重业务 accumulateChecked(500)",
-      "wallMs": 8446,
+      "wallMs": 4349,
       "blocksSpanned": 1,
       "gasTotal": "855800"
     },
     {
       "label": "轻业务 creditCached(1)",
-      "wallMs": 4419,
+      "wallMs": 4368,
       "blocksSpanned": 1,
       "gasTotal": "265980"
     }

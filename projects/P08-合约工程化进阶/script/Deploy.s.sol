@@ -34,6 +34,23 @@ contract Deploy is Script {
 
         _record(address(drop), "MerkleAirdrop");
         _record(address(lab), "GasLab");
+
+        // 合并快照：latest.json 的语义必须是「当前部署的全量」，而不是「最后一个合约」。
+        //   （旧实现逐合约覆写 latest.json → 只剩最后写的 GasLab，前端/脚本按 latest 读会拿不到另一个合约。）
+        //   口径与 B08 的 Deploy.s.sol 一致：deployments/<chainId>/all.json + deployments/latest.json。
+        string memory obj = vm.serializeAddress("rec", "MerkleAirdrop", address(drop));
+        obj = vm.serializeAddress("rec", "GasLab", address(lab));
+        obj = vm.serializeUint("rec", "chainId", block.chainid);
+        obj = vm.serializeBytes32("rec", "merkleRoot", root);
+        obj = vm.serializeString("rec", "foundryProfile", vm.envOr("FOUNDRY_PROFILE", string("default")));
+        obj = vm.serializeString("rec", "evmVersion", vm.envOr("EVM_VERSION_RECORD", string("cancun")));
+        obj = vm.serializeString("rec", "networkProfile", vm.envOr("NETWORK_PROFILE", string("unknown")));
+
+        string memory dir = string.concat("deployments/", vm.toString(block.chainid));
+        vm.createDir(dir, true);
+        vm.writeJson(obj, string.concat(dir, "/all.json"));
+        vm.writeJson(obj, "deployments/latest.json");
+        console.log(unicode"  record      deployments/latest.json (all contracts)");
     }
 
     function _record(address addr, string memory name) internal {
@@ -49,7 +66,6 @@ contract Deploy is Script {
         vm.createDir(dir, true);
         string memory file = string.concat(dir, "/", name, ".json");
         vm.writeJson(obj, file);
-        vm.writeJson(obj, "deployments/latest.json");
         console.log(unicode"  record      ", file);
     }
 }

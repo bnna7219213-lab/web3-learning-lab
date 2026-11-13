@@ -1,0 +1,16 @@
+{
+  "address": "0x0C06A533F43458AF31B3DD27793a0eABA1519A97",
+  "admin": "0xD9cb13A2737416E424fb70842d92503bfbf45985",
+  "cap": "1000000000000000000000000",
+  "chainId": 19880601,
+  "contract": "LabToken",
+  "deployedBytecodeHash": "0x91cf1a041ba8f8853253c32cc0ff5c7370d04281d9a83de292ef706400594c4b",
+  "deployer": "0xD9cb13A2737416E424fb70842d92503bfbf45985",
+  "evmVersion": "london",
+  "foundryProfile": "consortium",
+  "initialMint": "100000000000000000000000",
+  "networkProfile": "consortium",
+  "rpcUrl": "http://127.0.0.1:8551",
+  "verifiableOnExplorer": false,
+  "version": "1.0.0"
+}

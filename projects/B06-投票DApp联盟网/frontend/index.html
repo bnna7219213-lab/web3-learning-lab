@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>B06 · 审批台（双人复核）</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <header>
+    <h1>B06 · 审批台（双人复核 · 联盟网）</h1>
+    <div class="sub">后端代签 · 零 gas 显式参数 · 提案 → 复核 → 生效延迟 → 执行（撤销窗口内可撤）</div>
+    <div id="meta" class="meta">加载中…</div>
+  </header>
+
+  <section class="panel">
+    <h2>① 选择成员身份（前端切换，交易由 BFF 代签）</h2>
+    <div id="members" class="members"></div>
+  </section>
+
+  <section class="panel">
+    <h2>② 发起提案 <span class="hint">（需提案权；提案人不能复核自己的提案）</span></h2>
+    <form id="proposeForm" class="form">
+      <label>标题 <input name="title" placeholder="补贴直达-第 N 批" required /></label>
+      <label>目标 <input name="target" placeholder="0x…（留空=自己）" /></label>
+      <label>金额(wei) <input name="value" value="0" /></label>
+      <label>数据 <input name="data" placeholder="0x（calldata）" /></label>
+      <button type="submit">提案</button>
+    </form>
+  </section>
+
+  <section class="panel">
+    <h2>③ 提案列表 <span class="hint">（操作按钮按当前成员身份与状态自动启用）</span></h2>
+    <div class="tablewrap">
+      <table id="proposals">
+        <thead><tr><th>#</th><th>标题</th><th>提案人</th><th>复核人</th><th>状态</th><th>可执行时间</th><th>操作</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <div id="toast" class="toast hidden"></div>
+  <footer>被拒操作会显示可读原因（如 <code>ProposerCannotReview</code>），同时以 status=0 交易在链上留痕。</footer>
+  <script src="./app.js"></script>
+</body>
+</html>
