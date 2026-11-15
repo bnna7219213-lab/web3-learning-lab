@@ -21,6 +21,7 @@
 | **联盟内权益凭证** | `projects/B07` | NFT 市场的联盟版：成员白名单转让（禁二级）、元数据只存哈希（内网 OSS + P01 出证结构）、4907 租期、到期自动回收、核销与审计留痕；**与 B03 水龙头衔接——一次领取同时得到余额与凭证**；零 gas + 4 验证者 QBFT 实测 |
 | **合约工程化（联盟版）** | `projects/B08` | Gas 双指标（区块容量+出块延迟）、多成员升级演练（签名窗口+回滚）、Merkle×P01 四方向互验、>24KB 大合约边界实测、Create2×chainId 登记双算；40 条 forge 单测 + **10 个验收脚本**全绿，含**零构建运维看板**（`frontend/`） |
 | **链上数据平台（联盟版）** | `projects/B09` | 自建索引器 + BFF + 业务域看板：**B05 记账单位 + B06 审批流 + B07 凭证/水龙头 + B08 工程事件**同索引；ERC20/NFT 分离派生、链上余额对账、事件源变化全量重扫；全量验收 48/48 |
+| **Agent 硅基身份经济** | `projects/P27` | 给链上支付 Agent 一个可认定/可积累/可授权/可问责的经济身份：soulbound 身份（碳基硅基同构）+ 信号 3/5 阈值声誉 + mandate×tier 双闸门代付 + reasonRef 决策留痕；78 项 forge 测试 + 26 项 anvil 端到端验收全绿（机制对照 nexalink CPHS） |
 | 可独立复核的出证 | `shared/evidence` | v2 索引化 Merkle 树 + P-256 签名验证，12 项属性测试 + 9 项篡改拒绝 |
 
 ## 2. 快速开始（零依赖部分，Windows / Git Bash）
@@ -38,12 +39,13 @@ cd projects/P02-MiniChain迷你区块链基础
 node --test "test/*.test.mjs" && node bin/experiments.mjs
 ```
 
-Foundry 部分（P04/P05/P06 均已本机实测）：
+Foundry 部分（P04/P05/P06/P27 均已本机实测）：
 
 ```bash
 cd projects/P04-HelloContract基础 && forge test    # 11 项
 cd ../P05-ERC20代币基础     && forge test          # 36 项（4×500 轮 fuzz + invariant）
 cd ../P06-投票DApp基础      && forge test          # 13 项；前端 cd frontend && npm install && npm run dev
+cd ../P27-Agent硅基身份经济高级 && forge test      # 78 项；验收：anvil + bash script/deploy.sh anvil + npm install && npm run acceptance（26 项）
 ```
 
 ## 3. 本地跑起联盟链 + 自建钱包 + 浏览器（完整闭环）

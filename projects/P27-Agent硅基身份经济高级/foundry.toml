@@ -1,0 +1,50 @@
+[profile.default]
+src = "src"
+out = "out"
+libs = ["lib"]
+test = "test"
+script = "script"
+solc = "0.8.28"
+optimizer = true
+optimizer_runs = 200
+evm_version = "cancun"
+fs_permissions = [{ access = "read-write", path = "./" }]   # 部署记录要写 deployments/ 与 abi/
+verbosity = 2
+remappings = [
+    "forge-std/=lib/forge-std/src/",
+    "@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/",
+]
+# 说明：foundry 的 profile 是「编译/测试设置」，不是「网络」。网络 profile 在 env/*.env + script/deploy.sh。
+#       两者的区别与设计见 P05 docs/01-网络profile设计.md（本项目沿用同一分层）。
+
+[fuzz]
+runs = 500
+max_test_rejects = 65536
+
+[invariant]
+runs = 64
+depth = 32
+fail_on_revert = false
+
+[profile.release]
+optimizer = true
+optimizer_runs = 1_000_000
+via_ir = false          # 与 P05 一致；体积/Gas 对比实验在 P08 做过，这里不重复
+
+# 编译 profile 也要分网络——这是 B04 实测出来的，不是设计时想到的。
+# 联盟网 genesis 只开了 berlinBlock/londonBlock（没有 shanghaiBlock），
+# 而 default 用 evm_version="cancun" → solc 0.8.28 会在字节码里发 PUSH0（0x5f），
+# EIP-3855 是 Shanghai 才有的，于是**部署交易进块但 status=0、505440 gas 全烧光**。
+# anvil 默认 Cancun 所以 P04 全程发现不了这个差异。
+# 用 FOUNDRY_PROFILE=consortium 编译，字节码就只用到 London 之前的指令集。
+[profile.consortium]
+evm_version = "london"
+
+[profile.test]
+optimizer = false       # 关掉优化让 revert 信息与堆栈更好读
+
+[fmt]
+line_length = 118
+tab_width = 4
+bracket_spacing = false
+

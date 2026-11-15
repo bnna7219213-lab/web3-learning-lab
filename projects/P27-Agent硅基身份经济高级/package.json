@@ -1,0 +1,15 @@
+{
+  "name": "p27-agent-silicon-identity-economy",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "P27 Agent 硅基身份经济：身份/信号/代付三层合约的部署验收与 Agent 运行时演示",
+  "scripts": {
+    "test": "forge test",
+    "acceptance": "node scripts/acceptance.mjs",
+    "agent-demo": "node scripts/agent-demo.mjs"
+  },
+  "dependencies": {
+    "ethers": "^6.17.0"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "AGENT_ROLE()": "22459e18",
+  "DEFAULT_ADMIN_ROLE()": "a217fddf",
+  "createMandate(address,address,uint256,uint256,uint64,bytes32)": "9c95dd88",
+  "getRoleAdmin(bytes32)": "248a9ca3",
+  "grantRole(bytes32,address)": "2f2ff15d",
+  "hasRole(bytes32,address)": "91d14854",
+  "labId()": "95338551",
+  "mandateCount()": "60b5662e",
+  "mandateHashToId(bytes32)": "8f676243",
+  "mandateOf(uint256)": "2d996646",
+  "pay(uint256,uint256,string)": "ab8cf592",
+  "remainingAllowance(uint256)": "96b84cb6",
+  "renounceRole(bytes32,address)": "36568abe",
+  "revokeMandate(uint256)": "20e00cf7",
+  "revokeRole(bytes32,address)": "d547741f",
+  "setTierLimits(uint8,uint256,uint256)": "fd4242be",
+  "supportsInterface(bytes4)": "01ffc9a7",
+  "tierPerTxLimit(uint8)": "89368993",
+  "tierTotalLimit(uint8)": "34288a04",
+  "token()": "fc0c546a"
+}
